@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="static/logo.png" alt="RAG Chatbot logo" width="72" />
-
 # RAG Chatbot
 
 Upload your own documents and ask questions about them — answers are grounded in
