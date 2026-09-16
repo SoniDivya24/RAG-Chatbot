@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAG Chatbot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>📄 RAG Chatbot</h1>
+      <p class="subtitle">Upload one or more documents, then ask questions grounded in their content.</p>
+
+      <form id="upload-form">
+        <label class="file-drop" id="file-drop">
+          <input type="file" id="file-input" accept=".txt,.md,.pdf" multiple hidden />
+          <span id="file-drop-label">Click to choose .txt, .md, or .pdf files</span>
+        </label>
+        <button type="submit" id="upload-btn" disabled>Upload &amp; Index</button>
+      </form>
+      <p id="upload-error" class="error" hidden></p>
+
+      <div class="doc-list-header">
+        <span>Documents</span>
+        <strong id="status-chunks">0 chunks</strong>
+      </div>
+      <ul id="doc-list" class="doc-list">
+        <li class="doc-empty">No documents uploaded yet.</li>
+      </ul>
+
+      <button id="reset-btn" class="secondary">Clear conversation</button>
+    </aside>
+
+    <main class="chat">
+      <div id="messages" class="messages">
+        <div class="msg ai">
+          <div class="bubble">Hi! Upload one or more documents on the left, then ask me anything about them.</div>
+        </div>
+      </div>
+
+      <form id="chat-form" class="chat-input">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Ask a question about your documents…"
+          autocomplete="off"
+        />
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

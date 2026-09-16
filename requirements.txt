@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+python-multipart
+langchain
+langchain-core
+langchain-google-genai
+langchain-text-splitters
+supabase
+pypdf
+slowapi
+pytest
+httpx

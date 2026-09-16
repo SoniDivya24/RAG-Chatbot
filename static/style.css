@@ -1,0 +1,345 @@
+:root {
+  --bg: #0f1115;
+  --panel: #161923;
+  --panel-alt: #1c2030;
+  --border: #2a2f42;
+  --text: #e8eaf0;
+  --text-dim: #9aa0b4;
+  --accent: #6c8cff;
+  --accent-dim: #3d4b8a;
+  --user-bubble: #2b4a8f;
+  --ai-bubble: #1f2433;
+  --error: #ff6b6b;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar h1 {
+  font-size: 1.2rem;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+}
+
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.file-drop:hover,
+.file-drop.has-file {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+#upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+button {
+  font: inherit;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+#upload-btn {
+  background: var(--accent);
+  color: #fff;
+  padding: 10px;
+  font-weight: 600;
+}
+
+.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px;
+  margin-top: auto;
+}
+
+.secondary:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.error {
+  color: var(--error);
+  font-size: 0.8rem;
+  margin: 8px 0 0;
+}
+
+.doc-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 20px 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.doc-empty {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 8px 0;
+}
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius);
+  margin-bottom: 4px;
+  background: var(--panel-alt);
+}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.doc-name {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-meta {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.doc-delete {
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.doc-delete:hover {
+  color: var(--error);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msg {
+  display: flex;
+  max-width: 70%;
+}
+
+.msg.user {
+  align-self: flex-end;
+}
+
+.msg.ai {
+  align-self: flex-start;
+  flex-direction: column;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.msg.user .bubble {
+  background: var(--user-bubble);
+  color: #fff;
+}
+
+.msg.ai .bubble {
+  background: var(--ai-bubble);
+}
+
+.msg.pending .bubble {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.sources-section {
+  margin-top: 6px;
+  align-self: flex-start;
+}
+
+.sources-toggle {
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  padding: 2px 0;
+}
+
+.sources-toggle:hover {
+  color: var(--accent);
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  max-width: 480px;
+}
+
+.source-card {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.source-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.source-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-score {
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: var(--accent);
+}
+
+.source-text {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+
+#chat-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font: inherit;
+}
+
+#chat-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#send-btn {
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 45vh;
+  }
+
+  /* Nesting a flex:1 scrollable list inside an already-constrained
+     max-height sidebar collapses the list to near-zero height instead of
+     letting it flex — give it an explicit height budget instead. */
+  .doc-list {
+    flex: none;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .secondary {
+    margin-top: 12px;
+  }
+}
