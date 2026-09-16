@@ -3,8 +3,8 @@
 ## Open Decisions / To Revisit
 
 - Whether Render's cold-start (~1 min after 15 min idle) is acceptable for demo purposes,
-  or whether we need a keep-alive ping — revisit if it becomes a real issue.
-- Streaming responses — notebook lists it as a "natural next step," not required for v1.
+  or whether we need a keep-alive ping - revisit if it becomes a real issue.
+- Streaming responses - notebook lists it as a "natural next step," not required for v1.
 
 ## Creative Extensions (backlog, after core pipeline works)
 

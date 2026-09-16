@@ -57,6 +57,6 @@ User question
 ```
 
 Conversation history is stateless server-side (each `/api/chat` call receives the full
-history from the client, stored in browser `localStorage`) — same reasoning as the
+history from the client, stored in browser `localStorage`) - same reasoning as the
 Colab notebook: no shared memory between requests without a session store, and we
 don't need one for this scope.
