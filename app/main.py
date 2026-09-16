@@ -12,7 +12,7 @@ from app.chat_session import ChatSession
 from app.rag_engine import RagEngine
 from app.text_extract import extract_text
 
-# Only GOOGLE_API_KEY is required this early — Supabase-backed routes validate
+# Only GOOGLE_API_KEY is required this early - Supabase-backed routes validate
 # their own required keys lazily when first used.
 config.require("GOOGLE_API_KEY")
 
@@ -109,7 +109,12 @@ async def upload(request: Request, documents: list[UploadFile] = File(...)) -> J
             text = extract_text(content, file.filename)
             doc = rag_engine.load_document(text, file.filename)
             loaded.append(
-                {"id": doc["id"], "sourceName": doc["source_name"], "chunkCount": doc["chunk_count"]}
+                {
+                    "id": doc["id"],
+                    "sourceName": doc["source_name"],
+                    "chunkCount": doc["chunk_count"],
+                    "duplicate": doc.get("duplicate", False),
+                }
             )
         except Exception as exc:
             errors.append({"sourceName": file.filename, "error": str(exc)})

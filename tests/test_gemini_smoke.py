@@ -1,6 +1,6 @@
 """Smoke test: confirms GOOGLE_API_KEY + langchain-google-genai actually work
 end-to-end against the live Gemini API. Not a unit test (makes a real network
-call) — run manually while verifying setup, per docs/phases.md Phase 1.
+call) - run manually while verifying setup, per docs/phases.md Phase 1.
 """
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -24,7 +24,7 @@ def test_gemini_chat_call_succeeds():
         )
     )
 
-    # Not asserting exact wording — models phrase things differently even at
+    # Not asserting exact wording - models phrase things differently even at
     # temperature=0. The point of this smoke test is proving the API key and
     # package work end-to-end, so just check we got a real, on-topic reply.
     assert "4" in text

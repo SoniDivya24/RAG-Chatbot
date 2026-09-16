@@ -16,7 +16,7 @@ def get_supabase() -> Client:
     global _client
     if _client is None:
         config.require("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")
-        # service_role key bypasses row-level security — this client must only
+        # service_role key bypasses row-level security - this client must only
         # ever run server-side, never sent to the browser.
         _client = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY)
     return _client

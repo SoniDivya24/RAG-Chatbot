@@ -1,6 +1,6 @@
 """Smoke test: the actual HTTP API surface (upload -> chat -> documents ->
 delete) against the live Gemini + Supabase backends. Real network calls, not
-a unit test — run manually while verifying setup, per docs/phases.md Phase 4.
+a unit test - run manually while verifying setup, per docs/phases.md Phase 4.
 Cleans up after itself.
 """
 

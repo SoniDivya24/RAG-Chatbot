@@ -1,5 +1,5 @@
 """Smoke test: chunk + embed against the live Gemini embeddings API. Real
-network call, not a unit test — run manually while verifying setup, per
+network call, not a unit test - run manually while verifying setup, per
 docs/phases.md Phase 2.
 """
 

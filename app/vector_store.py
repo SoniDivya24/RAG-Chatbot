@@ -10,13 +10,34 @@ class SupabaseVectorStore:
     most recent one.
     """
 
+    def find_by_content_hash(self, content_hash: str) -> dict | None:
+        supabase = get_supabase()
+        res = (
+            supabase.table("documents")
+            .select("id, source_name, chunk_count, created_at")
+            .eq("content_hash", content_hash)
+            .limit(1)
+            .execute()
+        )
+        return res.data[0] if res.data else None
+
     def add_document(
-        self, source_name: str, chunk_texts: list[str], embedding_vectors: list[list[float]]
+        self,
+        source_name: str,
+        chunk_texts: list[str],
+        embedding_vectors: list[list[float]],
+        content_hash: str,
     ) -> dict:
         supabase = get_supabase()
         doc_res = (
             supabase.table("documents")
-            .insert({"source_name": source_name, "chunk_count": len(chunk_texts)})
+            .insert(
+                {
+                    "source_name": source_name,
+                    "chunk_count": len(chunk_texts),
+                    "content_hash": content_hash,
+                }
+            )
             .execute()
         )
         doc = doc_res.data[0]

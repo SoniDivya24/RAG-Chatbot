@@ -25,7 +25,7 @@ def get_text(response) -> str:
 
 class ChatSession:
     """One chat turn: retrieval (RagEngine) + conversation history combined
-    into a single LLM call. Deliberately stateless — the caller passes in
+    into a single LLM call. Deliberately stateless - the caller passes in
     prior turns and gets the reply back, storing nothing server-side. The
     browser (localStorage) is the source of truth for conversation history.
     """
@@ -55,14 +55,21 @@ class ChatSession:
                 "documents. Use the CONTEXT below if it's relevant to the question. "
                 "If the answer isn't in the context AND isn't something already "
                 "established earlier in this conversation, say you don't have that "
-                "information in the documents. Do not make up details.\n\n"
+                "information in the documents. Do not make up details. Answer "
+                "directly - do not add meta-commentary about which documents are "
+                "or aren't in scope, how many were provided, or reminders to upload "
+                "more, unless the user explicitly asks what's available.\n\n"
                 f"CONTEXT:\n{context}"
             )
         else:
+            # Deliberately no instruction to mention the lack of documents:
+            # that produced a "reminder" disclaimer on every single reply,
+            # including plain greetings. Capability explanation lives in the
+            # UI's help dialog instead; only bring it up if actually asked.
             system_content = (
-                "You are a helpful assistant. No documents have been uploaded yet, "
-                "so let the user know you can only answer general questions until "
-                "they upload one."
+                "You are a helpful, concise assistant. If the user asks something "
+                "that would require looking at an uploaded document and none has "
+                "been uploaded yet, let them know - otherwise just answer normally."
             )
 
         prior_messages = [

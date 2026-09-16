@@ -2,6 +2,7 @@ import io
 from pathlib import Path
 
 from pypdf import PdfReader
+from pypdf.errors import FileNotDecryptedError
 
 
 def extract_text(file_bytes: bytes, filename: str) -> str:
@@ -13,7 +14,12 @@ def extract_text(file_bytes: bytes, filename: str) -> str:
 
     if ext == ".pdf":
         reader = PdfReader(io.BytesIO(file_bytes))
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        if reader.is_encrypted:
+            raise ValueError("Password-protected PDFs aren't supported yet.")
+        try:
+            return "\n".join(page.extract_text() or "" for page in reader.pages)
+        except FileNotDecryptedError as exc:
+            raise ValueError("Password-protected PDFs aren't supported yet.") from exc
 
     if ext in (".txt", ".md"):
         return file_bytes.decode("utf-8")

@@ -27,3 +27,9 @@ def test_extract_pdf():
 def test_unsupported_extension_raises():
     with pytest.raises(ValueError, match="Unsupported file type"):
         extract_text(b"whatever", "spreadsheet.csv")
+
+
+def test_password_protected_pdf_raises_friendly_error():
+    pdf_bytes = (FIXTURES / "protected.pdf").read_bytes()
+    with pytest.raises(ValueError, match="(?i)password-protected"):
+        extract_text(pdf_bytes, "protected.pdf")
