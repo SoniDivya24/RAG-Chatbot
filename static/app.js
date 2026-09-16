@@ -127,6 +127,23 @@ function renderMarkdownLite(text) {
   return htmlParts.join("") || `<p>${escapeHtml(text)}</p>`;
 }
 
+const EXCERPT_MAX_CHARS = 220;
+
+// Chunk text is raw document markdown (headers, bullets, emphasis markers).
+// Shown verbatim it reads as visual noise in a small card, so strip the
+// syntax down to plain prose before truncating to a short snippet.
+function cleanExcerpt(text) {
+  const plain = text
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_`]/g, "")
+    .replace(/^[-•]\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plain.length > EXCERPT_MAX_CHARS
+    ? `${plain.slice(0, EXCERPT_MAX_CHARS).trimEnd()}…`
+    : plain;
+}
+
 function buildCitations(sources) {
   const details = document.createElement("details");
   details.className = "citations";
@@ -146,12 +163,12 @@ function buildCitations(sources) {
     source.textContent = s.source || "unlabeled";
     const score = document.createElement("span");
     score.className = "citation__score";
-    score.textContent = `${Math.round((s.score ?? 0) * 100)}%`;
+    score.textContent = `${Math.round((s.score ?? 0) * 100)}% match`;
     meta.append(source, score);
 
     const excerpt = document.createElement("p");
     excerpt.className = "citation__excerpt";
-    excerpt.textContent = s.text;
+    excerpt.textContent = cleanExcerpt(s.text);
 
     card.append(meta, excerpt);
     details.appendChild(card);

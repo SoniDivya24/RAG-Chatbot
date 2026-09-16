@@ -49,7 +49,7 @@ class ChatSession:
         )
         context = "\n\n".join(chunk["text"] for chunk in relevant_chunks)
 
-        if has_documents:
+        if relevant_chunks:
             system_content = (
                 "You are a helpful assistant answering questions about the uploaded "
                 "documents. Use the CONTEXT below if it's relevant to the question. "
@@ -60,6 +60,33 @@ class ChatSession:
                 "or aren't in scope, how many were provided, or reminders to upload "
                 "more, unless the user explicitly asks what's available.\n\n"
                 f"CONTEXT:\n{context}"
+            )
+        elif has_documents:
+            # Documents exist, but nothing relevant enough to this specific
+            # message was found (retrieve() already filtered out low-score
+            # matches). An empty CONTEXT block alone isn't a strong enough
+            # signal - without this explicit branch the model tends to fall
+            # back to its own general knowledge instead of declining, even
+            # more so for well-known facts (e.g. capital cities). A soft
+            # "say you don't know" instruction wasn't reliable across
+            # repeated tries, and an unconditional forced refusal wrongly
+            # declined plain greetings/small talk too - so this branch first
+            # tells the model to tell those apart, and only forces the exact
+            # refusal for genuine factual questions.
+            system_content = (
+                "The uploaded documents do not contain anything relevant to this "
+                "message.\n\n"
+                "First, decide: is this small talk / a greeting / a meta question "
+                "about the conversation itself (e.g. \"hi\", \"thanks\", \"what can "
+                "you do?\")? If so, just respond naturally and briefly - do not "
+                "mention the documents.\n\n"
+                "Otherwise, this is a real question you're expected to answer from "
+                "the documents, and you have no relevant content for it. You MUST "
+                "NOT use your own general knowledge to answer it, no matter how "
+                "simple, common, or well-known the answer might seem (this applies "
+                "even to basic facts like geography or dates). Reply with only this "
+                "sentence, with no additions: "
+                "\"I don't have that information in the documents.\""
             )
         else:
             # Deliberately no instruction to mention the lack of documents:

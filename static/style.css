@@ -638,30 +638,38 @@ button:disabled {
 
 .citation {
   margin-top: 8px;
-  margin-left: 12px;
-  padding: 8px 10px;
-  border-left: 2px solid var(--rule);
-  background: var(--card);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--accent) 4%, var(--card));
+}
+
+.citation + .citation {
+  margin-top: 6px;
 }
 
 .citation__meta {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 0.72rem;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .citation__source {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 600;
 }
 
 .citation__score {
   flex-shrink: 0;
-  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--card));
   color: var(--accent);
   font-weight: 600;
 }
@@ -669,10 +677,8 @@ button:disabled {
 .citation__excerpt {
   margin: 0;
   font-size: 0.78rem;
+  line-height: 1.5;
   color: var(--muted);
-  max-height: 120px;
-  overflow-y: auto;
-  white-space: pre-wrap;
 }
 
 .composer {

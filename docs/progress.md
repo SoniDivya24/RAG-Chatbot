@@ -13,8 +13,17 @@ next - update it the moment a phase starts or finishes, don't batch it for later
 | 4 - Chat Endpoint & RAG Wiring | Done | All routes wired + verified live (upload/chat/documents/delete), grounding confirmed, 14 tests pass |
 | 5 - Frontend | Done | Two-panel UI + expandable sources, verified in a real headless-Chromium browser session |
 | 6 - Local End-to-End Verification | Done | Full pass via headless browser; found + fixed a mobile CSS bug. Open: user's own look/feel review, whenever convenient |
-| 7 - Deployment (Render) | Done | Live at https://rag-chatbot-4p6g.onrender.com, verified (status/upload/chat/grounding/delete) |
+| 7 - Deployment (Render) | Done | Live at https://rag-chatbot-4p6g.onrender.com, tracking `main` (switched from `dev`). Verified (status/upload/chat/grounding/delete) |
 | 8 - Creative Extensions | Not started | Optional, post-MVP |
+
+**Post-MVP polish (post-Phase 7, ongoing as needed):** full UI redesign (themeable
+accent colors, popover theme switcher, blue-grey masthead, floating toast errors,
+multiline composer), document dedup by content hash, relevance-score filtering on
+retrieved chunks (`MIN_RELEVANCE_SCORE`), password-protected PDF handling, and a
+grounding fix for off-topic questions (documents present but nothing relevant
+retrieved could fall back to the model's general knowledge instead of declining -
+fixed in `app/chat_session.py` by giving the model an explicit small-talk-vs-real-
+question branch instead of a single blanket instruction).
 
 **Status values:** `Not started` / `In progress` / `Blocked (<reason>)` / `Done`.
 

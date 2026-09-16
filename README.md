@@ -47,14 +47,30 @@ phases, backlog).
   `delete_document` verified end-to-end: a real document was loaded, retrieved by
   similarity search, and deleted. RLS is enabled on both tables (no policies - the app
   only ever accesses them via the `service_role` key, which bypasses RLS).
-- **Frontend works end-to-end, verified in a real browser.** Two-panel layout
-  (`static/index.html`/`app.js`/`style.css`): sidebar for upload + document list +
-  status, main panel for chat. Each assistant reply has an expandable **Sources**
-  section showing the retrieved chunk's source filename, similarity score, and
-  actual text - so the RAG grounding is visually verifiable, not just claimed.
-  Chat history persists in `localStorage`. Verified with a headless-Chromium
-  session: upload → shows in document list → chat reply → sources expand with
-  real content - zero console errors.
+- **Frontend works end-to-end, verified in a real browser.** Single-column layout
+  (`static/index.html`/`app.js`/`style.css`): a blue-grey masthead with a themeable
+  accent color (5 predefined themes - orange default, pink, blue, green, purple -
+  picked from a popover, not an open color strip), a chat thread, an always-visible
+  document rail directly above the composer, and a multiline composer (Enter to
+  send on desktop, Shift+Enter for a newline, native behavior on touch devices).
+  Each assistant reply that used document content has an expandable **Sources**
+  section showing the retrieved chunk's source filename, similarity score, and a
+  cleaned/truncated excerpt - so the RAG grounding is visually verifiable, not just
+  claimed. Upload errors surface as an auto-dismissing floating toast; full-page
+  drag-and-drop is supported. Chat history persists in `localStorage`; starting a
+  "New conversation" clears history *and* deletes every uploaded document, for a
+  genuinely clean slate. Verified with a headless-Chromium session: upload → shows
+  in document list → chat reply → sources expand with real content - zero console
+  errors.
+- **Document dedup, relevance filtering, and grounding confirmed.** Documents are
+  hashed by content (SHA-256) before indexing, so re-uploading the same content
+  under any filename is a no-op rather than a duplicate index. Retrieved chunks
+  below `MIN_RELEVANCE_SCORE` are dropped before they ever reach the model or the
+  UI, so the Sources panel only ever shows genuinely relevant matches. Off-topic
+  questions (no relevant chunks found) are explicitly declined rather than
+  answered from the model's own general knowledge - including well-known facts
+  that the model would otherwise answer confidently - while small talk and meta
+  questions ("hi", "what can you do?") still get a normal, natural reply.
 - **End-to-end verification pass complete.** Multi-document upload, cross-document
   grounded retrieval, out-of-scope refusal, delete-via-UI, unsupported-file
   rejection, history persistence across reloads, and clear-conversation all
@@ -83,7 +99,7 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 pytest
-# 14 tests, most making real network calls (Gemini + Supabase) - needs GOOGLE_API_KEY,
+# 16 tests, most making real network calls (Gemini + Supabase) - needs GOOGLE_API_KEY,
 # SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY set, and the schema already applied.
 ```
 
