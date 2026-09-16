@@ -1,106 +1,74 @@
-# RAG-Chatbot
+<div align="center">
 
-A Retrieval-Augmented Generation (RAG) chatbot: upload documents, ask questions, get
-answers grounded in what was actually uploaded - with sources shown for every answer.
+<img src="static/logo.png" alt="RAG Chatbot logo" width="72" />
 
-**Live demo:** https://rag-chatbot-4p6g.onrender.com
-(free tier - spins down after 15 min idle, first request after that takes ~1 min to wake up)
+# RAG Chatbot
 
-**Status:** see [docs/progress.md](docs/progress.md) for current phase-by-phase status.
+Upload your own documents and ask questions about them — answers are grounded in
+what you actually uploaded, with the exact source passages shown alongside every
+reply.
 
-## Stack
+**[Try the live demo →](https://rag-chatbot-4p6g.onrender.com)**
+*(free tier - spins down after 15 min idle, first request after that can take ~30-60s to wake up)*
 
-Python + FastAPI, LangChain + Google Gemini (chat + embeddings), Supabase
-(Postgres + pgvector) as the vector store, vanilla HTML/CSS/JS frontend, deployed on
-Render.
+</div>
 
-See [docs/](docs/) for full planning detail (stack, architecture, setup, frontend,
-phases, backlog).
+<br>
 
-## What's working
+![Screenshot of the chat UI answering a question grounded in an uploaded document, with the Sources panel expanded](docs/assets/screenshot.png)
 
-- **Full backend API works end-to-end.** `app/main.py` exposes:
-  - `GET /api/status` - health + live document/chunk counts
-  - `POST /api/upload` - multi-file upload (`.txt`/`.md`/`.pdf`), per-file validation
-    and error reporting
-  - `GET /api/documents` / `DELETE /api/documents/{id}` - list/remove uploaded docs
-  - `POST /api/chat` - grounded Q&A with conversation history, returns
-    `{ reply, sources: [{ text, score, source }] }`
-  - Rate limited (`slowapi`: 10/min upload, 20/min chat), consistent `{"error": ...}`
-    JSON error responses, serves `static/` at `/`.
-  - Verified live: uploads index correctly, grounded answers cite real retrieved
-    text, out-of-scope questions are correctly refused (not answered from general
-    knowledge) even when retrieval still returns low-score chunks, conversation
-    history/memory works across turns, validation and unsupported-file-type
-    rejection both work, delete cascades cleanly.
-- **Gemini connectivity confirmed.** `app/config.py` loads `.env.local` and validates
-  required keys lazily (only what the current feature needs). `tests/test_gemini_smoke.py`
-  makes a real call to `ChatGoogleGenerativeAI` and passes.
-- **Document ingestion (extract + chunk + embed) confirmed.** `app/text_extract.py`
-  pulls plain text out of `.txt`/`.md`/`.pdf` files; `app/rag_engine.py`'s `RagEngine`
-  splits it (`RecursiveCharacterTextSplitter`, 800/150) and embeds it via
-  `GoogleGenerativeAIEmbeddings` - verified live, 3072-dim vectors matching the
-  Supabase schema.
-- **Persistence + retrieval confirmed, live against Supabase.** `app/supabase_client.py`
-  + `app/vector_store.py` (`SupabaseVectorStore`) store chunks in Postgres/pgvector and
-  search them via the `match_chunks` RPC. `RagEngine.load_document`/`retrieve`/
-  `delete_document` verified end-to-end: a real document was loaded, retrieved by
-  similarity search, and deleted. RLS is enabled on both tables (no policies - the app
-  only ever accesses them via the `service_role` key, which bypasses RLS).
-- **Frontend works end-to-end, verified in a real browser.** Single-column layout
-  (`static/index.html`/`app.js`/`style.css`): a blue-grey masthead with a themeable
-  accent color (5 predefined themes - orange default, pink, blue, green, purple -
-  picked from a popover, not an open color strip), a chat thread, an always-visible
-  document rail directly above the composer, and a multiline composer (Enter to
-  send on desktop, Shift+Enter for a newline, native behavior on touch devices).
-  Each assistant reply that used document content has an expandable **Sources**
-  section showing the retrieved chunk's source filename, similarity score, and a
-  cleaned/truncated excerpt - so the RAG grounding is visually verifiable, not just
-  claimed. Upload errors surface as an auto-dismissing floating toast; full-page
-  drag-and-drop is supported. Chat history persists in `localStorage`; starting a
-  "New conversation" clears history *and* deletes every uploaded document, for a
-  genuinely clean slate. Verified with a headless-Chromium session: upload → shows
-  in document list → chat reply → sources expand with real content - zero console
-  errors.
-- **Document dedup, relevance filtering, and grounding confirmed.** Documents are
-  hashed by content (SHA-256) before indexing, so re-uploading the same content
-  under any filename is a no-op rather than a duplicate index. Retrieved chunks
-  below `MIN_RELEVANCE_SCORE` are dropped before they ever reach the model or the
-  UI, so the Sources panel only ever shows genuinely relevant matches. Off-topic
-  questions (no relevant chunks found) are explicitly declined rather than
-  answered from the model's own general knowledge - including well-known facts
-  that the model would otherwise answer confidently - while small talk and meta
-  questions ("hi", "what can you do?") still get a normal, natural reply.
-- **End-to-end verification pass complete.** Multi-document upload, cross-document
-  grounded retrieval, out-of-scope refusal, delete-via-UI, unsupported-file
-  rejection, history persistence across reloads, and clear-conversation all
-  verified via a real headless-browser session. A mobile-layout bug (document
-  list collapsing to invisible on narrow viewports) was found and fixed.
-- **Deployed and verified live on Render**: https://rag-chatbot-4p6g.onrender.com
-  - status, upload, grounded chat, out-of-scope refusal, and delete all confirmed
-  working against the actual deployed instance, not just locally.
+## What it does
 
-## Local setup
+- **Upload** `.txt`, `.md`, or `.pdf` files (drag-and-drop or the file picker).
+- **Ask questions** about them in plain conversation - replies stay grounded in
+  your documents rather than the model's own general knowledge, and honestly
+  say "I don't have that information" when nothing relevant was uploaded.
+- **See the receipts.** Every grounded answer has an expandable **Sources**
+  panel showing exactly which passage it came from, which file, and how
+  strong the match was - so you're never just taking the answer on faith.
+- **Multiple documents, no duplicates.** Upload as many files as you like;
+  re-uploading the same content (even under a different filename) is
+  detected and skipped rather than indexed twice.
+- **5 color themes**, a clean conversation history that persists between
+  visits, and a "New conversation" button that gives you a genuinely clean
+  slate (chat + documents both cleared).
+
+## How it works
+
+```
+upload → extract text → chunk → embed (Gemini) → store (Supabase/pgvector)
+                                                        ↓
+your question → embed → similarity search → relevant chunks → grounded answer (Gemini)
+```
+
+Built with **Python + FastAPI** on the backend, **LangChain + Google Gemini**
+for chat and embeddings, **Supabase (Postgres + pgvector)** as the vector
+store, and a **vanilla HTML/CSS/JS** frontend - no frontend framework, no
+build step. Deployed on **Render**.
+
+For the full technical write-up (architecture, schema, API contract, and
+how each part was built and verified), see [docs/](docs/) - start with
+[docs/architecture.md](docs/architecture.md). Current build status/phase
+tracking lives in [docs/progress.md](docs/progress.md).
+
+## Running it yourself
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+
 # Fill in .env.local with GOOGLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-# - see docs/setup.md for the full list of variables. Also run supabase/schema.sql
-# against your Supabase project (SQL Editor, or via the Supabase MCP server) first.
+# - see docs/setup.md for the full list. Also run supabase/schema.sql against
+# your Supabase project first (SQL Editor, or the Supabase MCP server).
 
 uvicorn app.main:app --reload --port 8000
-# -> open http://localhost:8000 for the chat UI, or
-# -> http://localhost:8000/api/status should return {"status": "ok", ...}
+# -> open http://localhost:8000
 ```
-
-## Running tests
 
 ```bash
 pytest
-# 16 tests, most making real network calls (Gemini + Supabase) - needs GOOGLE_API_KEY,
-# SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY set, and the schema already applied.
+# 16 tests - most make real network calls (Gemini + Supabase), so
+# GOOGLE_API_KEY / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY need to be set
+# and the schema already applied.
 ```
-
-This will keep getting filled in with real, verified instructions as each phase completes.
