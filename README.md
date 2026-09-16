@@ -3,6 +3,9 @@
 A Retrieval-Augmented Generation (RAG) chatbot: upload documents, ask questions, get
 answers grounded in what was actually uploaded — with sources shown for every answer.
 
+**Live demo:** https://rag-chatbot-4p6g.onrender.com
+(free tier — spins down after 15 min idle, first request after that takes ~1 min to wake up)
+
 **Status:** see [docs/progress.md](docs/progress.md) for current phase-by-phase status.
 
 ## Stack
@@ -57,8 +60,9 @@ phases, backlog).
   rejection, history persistence across reloads, and clear-conversation all
   verified via a real headless-browser session. A mobile-layout bug (document
   list collapsing to invisible on narrow viewports) was found and fixed.
-- Next: **Phase 7 — Deployment (Render)**. See [docs/progress.md](docs/progress.md)
-  for exact status.
+- **Deployed and verified live on Render**: https://rag-chatbot-4p6g.onrender.com
+  — status, upload, grounded chat, out-of-scope refusal, and delete all confirmed
+  working against the actual deployed instance, not just locally.
 
 ## Local setup
 

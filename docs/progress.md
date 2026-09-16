@@ -13,7 +13,7 @@ next — update it the moment a phase starts or finishes, don't batch it for lat
 | 4 — Chat Endpoint & RAG Wiring | Done | All routes wired + verified live (upload/chat/documents/delete), grounding confirmed, 14 tests pass |
 | 5 — Frontend | Done | Two-panel UI + expandable sources, verified in a real headless-Chromium browser session |
 | 6 — Local End-to-End Verification | Done | Full pass via headless browser; found + fixed a mobile CSS bug. Open: user's own look/feel review, whenever convenient |
-| 7 — Deployment (Render) | Not started | Next up. Needs Render account + pushed repo |
+| 7 — Deployment (Render) | Done | Live at https://rag-chatbot-4p6g.onrender.com, verified (status/upload/chat/grounding/delete) |
 | 8 — Creative Extensions | Not started | Optional, post-MVP |
 
 **Status values:** `Not started` / `In progress` / `Blocked (<reason>)` / `Done`.
