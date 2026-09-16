@@ -604,9 +604,58 @@ button:disabled {
 
 .note--pending {
   align-self: flex-start;
+  padding: 12px 14px;
+}
+
+.note__pending-label {
+  margin: 0 0 8px;
   color: var(--pending);
   font-style: italic;
-  padding: 10px 14px;
+  font-size: 0.85rem;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(260px, 60vw);
+}
+
+.skeleton__line {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 10%, var(--rule)) 25%,
+    color-mix(in srgb, var(--accent) 22%, var(--rule)) 50%,
+    color-mix(in srgb, var(--accent) 10%, var(--rule)) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.3s ease-in-out infinite;
+}
+
+.skeleton__line--full {
+  width: 100%;
+}
+
+.skeleton__line--short {
+  width: 55%;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton__line {
+    animation: none;
+  }
 }
 
 .citations {

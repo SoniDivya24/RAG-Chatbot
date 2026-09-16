@@ -177,6 +177,29 @@ function buildCitations(sources) {
   return details;
 }
 
+function appendPendingNote() {
+  const note = document.createElement("div");
+  note.className = "note note--pending";
+
+  const label = document.createElement("p");
+  label.className = "note__pending-label";
+  label.textContent = "Thinking...";
+  note.appendChild(label);
+
+  const skeleton = document.createElement("div");
+  skeleton.className = "skeleton";
+  skeleton.innerHTML = `
+    <span class="skeleton__line skeleton__line--full"></span>
+    <span class="skeleton__line skeleton__line--full"></span>
+    <span class="skeleton__line skeleton__line--short"></span>
+  `;
+  note.appendChild(skeleton);
+
+  els.threadLog.appendChild(note);
+  els.threadLog.scrollTop = els.threadLog.scrollHeight;
+  return note;
+}
+
 function appendNote(role, text, sources) {
   const note = document.createElement("div");
   note.className = `note note--${role}`;
@@ -431,7 +454,7 @@ els.composerForm.addEventListener("submit", async (e) => {
   els.composerInput.value = "";
   autosizeComposer();
   els.composerSubmit.disabled = true;
-  const pending = appendNote("pending", "Thinking...");
+  const pending = appendPendingNote();
 
   try {
     const res = await fetch("/api/chat", {
