@@ -48,12 +48,18 @@ class ChatSession:
         history = history or []
         profile = self.rag_engine.profile
         has_documents = self.rag_engine.has_documents()
+        if has_documents:
+            canned = profile.precheck(user_message, self.rag_engine.store)
+            if canned:
+                return {"reply": canned, "sources": []}
         relevant_chunks = self.rag_engine.retrieve(user_message) if has_documents else []
 
+        sources: list[dict] = []
+        context = ""
         if relevant_chunks:
-            # The mode's profile decides how hits become context and which
-            # grounding instructions frame them.
-            context = profile.format_context(relevant_chunks)
+            # The mode's profile decides how hits become context and sources, and
+            # which grounding instructions frame them.
+            context, sources = profile.build_context(relevant_chunks, self.rag_engine.store)
             system_content = f"{profile.grounded_instructions}\n\nCONTEXT:\n{context}"
         elif has_documents:
             # Documents exist, but nothing relevant enough to this specific
@@ -108,8 +114,7 @@ class ChatSession:
         response = self.llm.invoke(messages)
         reply = get_text(response)
 
-        sources = [profile.source_payload(chunk) for chunk in relevant_chunks]
         if profile.drop_sources_on_refusal and reply.strip().startswith(profile.refusal):
             sources = []  # the passages didn't inform a refusal, so don't present them as sources
 
-        return {"reply": reply, "sources": sources}
+        return {"reply": reply, "sources": sources, "contextTokens": len(context) // 4 + 1 if context else 0}

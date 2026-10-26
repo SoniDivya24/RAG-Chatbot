@@ -157,11 +157,18 @@ PDFs are **built-in samples, gitignored** (`samples/`), loadable with one click 
   per-content-type table and `--label`, so one document can be run through two modes
   (`docs/results/standard-on-imac.md` vs `visual.md`).
 
-### Phase 14 - Long document mode (port of the World Bank prototype)
+### Phase 14 - Long document mode (port of the World Bank prototype)  *(done - see progress.md)*
 - **Build:** font-based structure -> section hierarchy, parent/child chunks, region/chapter filters
   (derived from the document's own headings rather than a hard-coded list), context assembly with a
   token budget, table-aware chunks. Eval: 3 core + extended + refusals. Needs the ~1,000-embedding
   index: reuse the prototype's embedding cache, and expect to spread any remainder over the daily cap.
+- **As built:** the prototype's structure recovery and query vocabulary are tuned to the reference report (fonts,
+  chapters, regions, country aliases), so they ship as a *preset* chosen when the document identifies itself as that
+  report; any other long PDF gets a generic font-size outline (headings by type scale, chapters from "Chapter N"
+  headings, page sections if there are none). Everything else - section-bounded chunks, parent sidecars, context
+  assembly, filters with an unfiltered fallback, the canned bad-chapter reply - is generic. The prototype had never
+  run live: the first live run exposed a mid-table column-header problem (fixed by spelling out the rows under it) and
+  two evaluation bugs of my own (a judge that matched characters; retrieval metrics that skipped the filter).
 
 ### Phase 15 - Samples & evaluation
 - **Build:** `samples/` (gitignored PDFs) with a "Load sample" action per mode and pre-wired example

@@ -48,14 +48,17 @@ Gemini is the only external service; nothing is deployed.
 A **mode switch** under the title flips the app between this **Standard** RAG
 and three document-specific RAGs (**Report**, **Long document**, **Visual
 document**). Each mode has its own documents and its own conversation.
-**Standard**, **Report** and **Visual document** are built; **Long document** is marked "soon". Report
+All four modes are built: **Standard**, **Report**, **Long document** and **Visual document**. Report
 mode is for plain-text PDF reports: it keeps every passage's page, cites pages
 in its answers, and answers "I could not find this in the document." (with no
 sources) when the report doesn't cover the question. **Visual document** mode is for
 PDFs whose facts sit in tables, charts, footnotes and call-outs: tables are rebuilt so each value
 carries its row and column, footnotes travel with the claims they limit, and chart pages are
 described by the model - so a question about a footprint split or a power-consumption table finds
-its number instead of a nearby sentence. Answers are tagged with the mode that
+its number instead of a nearby sentence. **Long document** mode is for 100+ page structured
+reports: it recovers the chapter / section / box outline, so a question about South Asia is answered from
+the South Asia section (not East Asia's), "Chapter 3" means Chapter 3, and the model is given the text
+*around* each hit - ordered and kept within a token budget - instead of a pile of fragments. Answers are tagged with the mode that
 produced them, and the Sources panel shows page / section / element type where
 a mode provides them. See Part 2 of [docs/phases.md](docs/phases.md) for the
 roadmap.

@@ -16,18 +16,18 @@ def test_registry_lists_the_four_modes_in_order():
         "Long document",
         "Visual document",
     ]
-    assert all(profiles[m].available for m in ("standard", "report", "visual"))
-    assert profiles["long"].available is False
+    assert all(p.available for p in profiles.values())  # every planned mode is built
 
 
 def test_unavailable_profiles_fail_clearly_instead_of_falling_back():
-    long_mode = default_profiles()["long"]
-    assert isinstance(long_mode, UnavailableProfile)
+    # No mode is unavailable any more, but the placeholder is how a planned mode is registered.
+    planned = UnavailableProfile("tables", "Tables", "A mode that isn't built yet.")
+    assert planned.available is False
 
-    with pytest.raises(ValueError, match="Long document mode isn't available yet"):
-        long_mode.extract(b"x", "a.pdf")
-    with pytest.raises(ValueError, match="Long document mode isn't available yet"):
-        long_mode.chunk("x")
+    with pytest.raises(ValueError, match="Tables mode isn't available yet"):
+        planned.extract(b"x", "a.pdf")
+    with pytest.raises(ValueError, match="Tables mode isn't available yet"):
+        planned.chunk("x")
 
 
 def test_standard_chunks_text_with_overlap_and_no_metadata():

@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import threading
 import uuid
 from datetime import datetime, timezone
@@ -83,6 +84,7 @@ class LocalVectorStore:
         embedding_vectors: list[list[float]],
         content_hash: str,
         chunk_metadatas: list[dict] | None = None,
+        sidecars: dict | None = None,
     ) -> dict:
         doc = {
             "id": str(uuid.uuid4()),
@@ -114,11 +116,42 @@ class LocalVectorStore:
             self._collection.delete(where={"document_id": doc["id"]})
             raise RuntimeError(f"Failed to save chunks: {exc}") from exc
 
+        try:
+            for name, data in (sidecars or {}).items():
+                self._write_sidecar(doc["id"], name, data)
+        except Exception as exc:
+            self._collection.delete(where={"document_id": doc["id"]})
+            shutil.rmtree(self._sidecar_dir(doc["id"]), ignore_errors=True)
+            raise RuntimeError(f"Failed to save document data: {exc}") from exc
+
         with self._lock:
             registry = self._read_registry()
             registry[doc["id"]] = doc
             self._write_registry(registry)
         return self._public(doc)
+
+    # -- sidecars: JSON data kept per document (e.g. a mode's parent sections) ---
+
+    def _sidecar_dir(self, document_id: str) -> Path:
+        return self.path / "sidecars" / document_id
+
+    def _write_sidecar(self, document_id: str, name: str, data) -> None:
+        directory = self._sidecar_dir(document_id)
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f"{name}.json").write_text(json.dumps(data))
+
+    def get_sidecar(self, document_id: str, name: str):
+        path = self._sidecar_dir(document_id) / f"{name}.json"
+        return json.loads(path.read_text()) if path.exists() else None
+
+    def all_sidecars(self, name: str) -> dict:
+        """{document_id: data} for every document that has this sidecar."""
+        found = {}
+        for doc in self.list_documents():
+            data = self.get_sidecar(doc["id"], name)
+            if data is not None:
+                found[doc["id"]] = data
+        return found
 
     def list_documents(self) -> list[dict]:
         with self._lock:
@@ -128,6 +161,7 @@ class LocalVectorStore:
 
     def delete_document(self, document_id: str) -> None:
         self._collection.delete(where={"document_id": document_id})
+        shutil.rmtree(self._sidecar_dir(document_id), ignore_errors=True)
         with self._lock:
             registry = self._read_registry()
             if registry.pop(document_id, None) is not None:

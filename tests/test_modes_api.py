@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.modes import Modes
-from app.profiles import Chunk, StandardProfile, default_profiles
+from app.profiles import Chunk, StandardProfile, UnavailableProfile, default_profiles
 
 POLICY = (
     b"Acme Robotics leave policy. Full-time employees accrue 18 days of paid vacation "
@@ -54,6 +54,7 @@ def api(tmp_path, fake_embedder, monkeypatch):
     profiles = default_profiles()
     profiles["standard"].min_score = 0.25  # floor suited to the fake embeddings
     profiles["paged"] = PagedTestProfile()
+    profiles["planned"] = UnavailableProfile("planned", "Planned", "Not built yet.")
     test_modes = Modes(tmp_path / "data", fake_embedder, profiles)
     monkeypatch.setattr(main, "modes", test_modes)
     main.limiter.reset()  # the rate limiter is process-wide state; start each test fresh
@@ -73,11 +74,12 @@ def test_modes_endpoint_lists_all_four_with_availability(api):
     modes = api.client.get("/api/modes").json()["modes"]
 
     by_id = {m["id"]: m for m in modes}
-    assert list(by_id) == ["standard", "report", "long", "visual", "paged"]
+    assert list(by_id) == ["standard", "report", "long", "visual", "paged", "planned"]
     assert by_id["standard"]["available"] is True and by_id["standard"]["documentCount"] == 0
     assert by_id["report"]["available"] is True and by_id["report"]["extensions"] == [".pdf"]
     assert by_id["visual"]["available"] is True and by_id["visual"]["extensions"] == [".pdf"]
-    assert by_id["long"]["available"] is False and "documentCount" not in by_id["long"]
+    assert by_id["long"]["available"] is True and by_id["long"]["extensions"] == [".pdf"]
+    assert by_id["planned"]["available"] is False and "documentCount" not in by_id["planned"]
     assert by_id["standard"]["extensions"] == [".txt", ".md", ".pdf"]
 
 
@@ -97,13 +99,13 @@ def test_unknown_mode_is_a_400_on_every_route(api):
 
 
 def test_unavailable_mode_is_a_501_and_never_calls_the_model(api):
-    res = api.client.post("/api/chat", json={"message": "hi", "mode": "long"})
+    res = api.client.post("/api/chat", json={"message": "hi", "mode": "planned"})
 
     assert res.status_code == 501
-    assert res.json() == {"error": "The Long document mode isn't available yet."}
+    assert res.json() == {"error": "The Planned mode isn't available yet."}
     assert api.llm.messages == []
-    assert upload(api.client, "a.txt", b"hello", "long").status_code == 501
-    assert api.client.get("/api/status?mode=long").status_code == 501
+    assert upload(api.client, "a.txt", b"hello", "planned").status_code == 501
+    assert api.client.get("/api/status?mode=planned").status_code == 501
 
 
 def test_each_mode_has_its_own_library(api):
@@ -184,4 +186,4 @@ def test_modes_endpoint_carries_ui_presentation_data(api):
     assert "South Asia" in by_id["long"]["exampleQuestions"][0]
     assert "ENERGY STAR" in by_id["visual"]["exampleQuestions"][0]
     assert "depository libraries" in by_id["report"]["exampleQuestions"][0]
-    assert all(m["uploadHint"] for m in by_id.values() if m["id"] != "paged")
+    assert all(m["uploadHint"] for m in by_id.values() if m["id"] not in ("paged", "planned"))  # the real modes

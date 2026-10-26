@@ -27,6 +27,7 @@ class RagEngine:
         # fake embedder; the app uses the defaults (local `data/` + Gemini).
         self.store = store or LocalVectorStore()
         self.embedder = embedder or CachedEmbedder()
+        self.last_filter_notes: list[str] = []
 
     # -- helpers kept for callers that work with plain text -----------
 
@@ -79,6 +80,7 @@ class RagEngine:
             vectors,
             content_hash,
             chunk_metadatas=[c.metadata for c in chunks],
+            sidecars=self.profile.sidecars(extracted),
         )
         return {
             "id": doc["id"],
@@ -91,10 +93,30 @@ class RagEngine:
 
     def retrieve(self, question: str, k: int | None = None, where: dict | None = None) -> list[dict]:
         """Embed the question and return the top-k most relevant chunks across
-        all documents, filtered to ones actually relevant enough to matter."""
+        all documents, filtered to ones actually relevant enough to matter.
+
+        The mode may narrow the search with a metadata filter (e.g. a region the question names).
+        A wrong filter would hide the answer, so if it leaves nothing relevant the search is
+        retried unfiltered. `last_filter_notes` says what was applied (for evaluation)."""
         query_vector = self.embed_query(question)
-        results = self.store.similarity_search(query_vector, k or self.profile.retrieval_k, where)
-        return [r for r in results if r["score"] >= self.profile.min_score]
+        notes: list[str] = []
+        if where is None:
+            where, notes = self.profile.query_filter(question, self.store)
+        top_k = k or self.profile.retrieval_k
+        results = [
+            r
+            for r in self.store.similarity_search(query_vector, top_k, where)
+            if r["score"] >= self.profile.min_score
+        ]
+        if where and not results:
+            notes = [*notes, "filter matched nothing relevant: retried unfiltered"]
+            results = [
+                r
+                for r in self.store.similarity_search(query_vector, top_k)
+                if r["score"] >= self.profile.min_score
+            ]
+        self.last_filter_notes = notes
+        return results
 
     def has_documents(self) -> bool:
         return self.count_chunks() > 0

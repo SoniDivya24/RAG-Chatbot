@@ -63,6 +63,24 @@ class Profile(ABC):
     def chunk(self, extracted: Any) -> list[Chunk]:
         """Turn the extracted document into chunks (raise ValueError if none)."""
 
+    def sidecars(self, extracted: Any) -> dict[str, Any]:
+        """Extra per-document data to store next to the chunks (JSON-able), e.g. the parent
+        sections a mode assembles its context from. Deleted with the document."""
+        return {}
+
+    def query_filter(self, question: str, store: Any) -> tuple[dict | None, list[str]]:
+        """A metadata filter for this question (and notes on why), or (None, [])."""
+        return None, []
+
+    def precheck(self, question: str, store: Any) -> str | None:
+        """A canned reply for questions that can be answered without the model (e.g. "Chapter 7"
+        when the document has four chapters), else None."""
+        return None
+
+    def build_context(self, hits: list[dict], store: Any) -> tuple[str, list[dict]]:
+        """(the CONTEXT text sent to the model, the sources shown to the user) for retrieved hits."""
+        return self.format_context(hits), [self.source_payload(hit) for hit in hits]
+
     def fingerprint(self, content: bytes, extracted: Any) -> str:
         """Identity of a document for duplicate detection."""
         return hashlib.sha256(content).hexdigest()

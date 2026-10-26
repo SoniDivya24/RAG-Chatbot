@@ -1,0 +1,15 @@
+{
+ "note": "Structure of the World Bank GEP report (Jun 2026) as the Long document profile reads it. The 146 sections and the outline are identical to the prototype's; 908 of 913 chunks are identical too (911 in the prototype). The others are chunks of Tables 2.8 and 2.10, which change their column headings part-way down: the new header row is marked, carried into the table's later chunks, and the rows under it spell out their column headings. Hashes only - no document text.",
+ "sections": 146,
+ "chunks": 913,
+ "kinds": {
+  "annex": 47,
+  "appendix": 5,
+  "body": 640,
+  "box": 142,
+  "front": 24,
+  "table": 55
+ },
+ "outline_sha256": "587de3dabb9035d39a3c78d664858a466ab4940219cca92212aa59964f49f087",
+ "embed_inputs_sha256": "404f4f5e8fb8931b0d6b3f958a672954bbe197419082d801a4ed59c7401faf94"
+}

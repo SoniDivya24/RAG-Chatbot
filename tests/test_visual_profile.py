@@ -19,25 +19,10 @@ from app.profiles.visual.callouts import all_callouts
 from app.profiles.visual.footnotes import claims, find_markers, parse_endnotes
 from app.profiles.visual.layout import derive_layout
 from app.profiles.visual.tables import extract_tables
+from tests.pdfs import BODY_TEXT, build_pdf, open_doc, text
 
 IMAC = Path(__file__).parent.parent / "samples" / "iMac_PER_Oct2024.pdf"
 GOLDEN = Path(__file__).parent / "golden" / "visual_imac_chunks.json"
-
-BODY_TEXT = "The quick brown fox jumps over the lazy dog while the committee reviews the annual figures. "
-
-
-def build_pdf(page_builders) -> bytes:
-    doc = pymupdf.open()
-    for build in page_builders:
-        page = doc.new_page(width=612, height=792)
-        build(page)
-    return doc.tobytes()
-
-
-def text(page, x, y, s, size=8.5, **kw):
-    page.insert_text((x, y), s, fontsize=size, **kw)
-    return x + pymupdf.get_text_length(s, fontsize=size)
-
 
 def body_page(title):
     def build(page):

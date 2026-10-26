@@ -32,7 +32,7 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
   (local-only foundation) Phase 10 (pluggable pipeline + `mode` plumbing) and Phase 11 (the UI
-  mode switch), Phase 12 (Report mode) and Phase 13 (Visual document mode) are Done; Phase 14 (Long document mode, from the World Bank prototype) is next.**
+  mode switch), Phases 12-14 (Report, Visual document and Long document modes) are Done; Phase 15 (samples & evaluation) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -84,7 +84,7 @@ Quick summary (see `README.md` for full detail and rationale):
   up to 25 MB. `scripts/import_cache.py` seeds the embedding cache from a prototype's stored vectors (Chroma index or
   `{key: vector}` JSON) so indexing a reference document costs no embeddings - run it before indexing a sample.
   `eval/run_eval.py --mode <mode>` indexes the sample into a throwaway library and writes `docs/results/<mode>.md`
-  (Report: core 3/3, extended 8/8, refusals 4/4, MRR 0.84). The reference PDFs live in the gitignored `samples/`.
+  (Report: core 3/3, extended 8/8, refusals 4/4, MRR 0.84; all four modes' results are in `docs/results/`). The reference PDFs live in the gitignored `samples/`.
 - **Visual document mode (Phase 13, done):** `app/profiles/visual/` - ported from the iMac prototype with every
   layout constant derived from the document (`layout.py`; pinned to the prototype's values on the iMac report by a
   test, and the chunks equal the prototype's). Needs `pymupdf` (install `--only-binary=:all:`). Chunks carry
@@ -93,8 +93,14 @@ Quick summary (see `README.md` for full detail and rationale):
   real report against a hash snapshot (`tests/golden/`). Eval: 21/21 (`docs/results/visual.md`). Chat notes written
   by the app or typed by the user are plain text now (underscores in file names were being italicised).
 - **Timeouts (Phase 13):** model calls are bounded - `LLM_TIMEOUT`/`VISION_TIMEOUT` via the chat model's own `timeout`, `EMBEDDING_TIMEOUT` enforced in `app/embeddings.py` (langchain-google-genai 4.4.2 ignores `request_options` and the SDK overrides the HTTP-client timeout per request, so don't "fix" this by passing `request_options`/`client_args`).
-- Next: Long document (14), ported from the World Bank prototype; then samples & evaluation (15) and the docs/video (16);
-  see `docs/phases.md` Part 2
+- **Long document mode (Phase 14, done):** `app/profiles/long/`. Generic hooks it introduced on every `Profile`: `sidecars`
+  (per-document JSON next to the chunks, deleted with the document - holds the parent sections and the query vocabulary),
+  `query_filter` (+ an unfiltered fallback in `RagEngine.retrieve`), `precheck` (a canned reply, no model call) and
+  `build_context` (profile-built context *and* sources). Reference-report preset in `gep.py`; any other PDF takes the generic
+  outline in `outline.py`. Eval 15/15 (`docs/results/long.md`) - read its notes: two checks were widened with the reason in
+  `eval/questions/long.json`. `eval/run_eval.py` now judges correctly (a flat `must_contain` list = every string required)
+  and measures retrieval through the mode's own filter.
+- Next: samples & evaluation (15), then docs and the demo video (16); see `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)
 
