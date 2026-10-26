@@ -45,23 +45,47 @@ document registry and a SQLite embedding cache, all under `data/`), and a
 **vanilla HTML/CSS/JS** frontend - no frontend framework, no build step.
 Gemini is the only external service; nothing is deployed.
 
-A **mode switch** under the title flips the app between this **Standard** RAG
-and three document-specific RAGs (**Report**, **Long document**, **Visual
-document**). Each mode has its own documents and its own conversation.
-All four modes are built: **Standard**, **Report**, **Long document** and **Visual document**. Report
-mode is for plain-text PDF reports: it keeps every passage's page, cites pages
-in its answers, and answers "I could not find this in the document." (with no
-sources) when the report doesn't cover the question. **Visual document** mode is for
-PDFs whose facts sit in tables, charts, footnotes and call-outs: tables are rebuilt so each value
-carries its row and column, footnotes travel with the claims they limit, and chart pages are
-described by the model - so a question about a footprint split or a power-consumption table finds
-its number instead of a nearby sentence. **Long document** mode is for 100+ page structured
-reports: it recovers the chapter / section / box outline, so a question about South Asia is answered from
-the South Asia section (not East Asia's), "Chapter 3" means Chapter 3, and the model is given the text
-*around* each hit - ordered and kept within a token budget - instead of a pile of fragments. Answers are tagged with the mode that
-produced them, and the Sources panel shows page / section / element type where
-a mode provides them. See Part 2 of [docs/phases.md](docs/phases.md) for the
-roadmap.
+## The four modes
+
+A **mode switch** under the title flips the app between four pipelines. Each mode has its own documents
+and its own conversation, and answers are tagged with the mode that produced them.
+
+| Mode | Use it for | What it does |
+|---|---|---|
+| **Standard** | Any `.txt`, `.md` or `.pdf` | The general-purpose RAG described above |
+| **Report** | Plain-text PDF reports | Keeps each passage's page, cites pages, and replies "I could not find this in the document." (no sources) when the report doesn't cover the question |
+| **Long document** | 100+ page structured reports | Recovers the chapter / section / box outline, so a South Asia question is answered from the South Asia section, "Chapter 3" means Chapter 3, and the model gets the text *around* each hit within a token budget |
+| **Visual document** | PDFs whose facts sit in tables, charts, footnotes and call-outs | Rebuilds tables so each value carries its row and column, keeps footnotes with their claims, and has the model describe chart pages |
+
+Report, Long document and Visual document each have a built-in **sample**: a "Load sample" button appears
+while the mode's library is empty. The three PDFs are not in the repo (see below).
+
+### Loading the samples
+
+Copy the three PDFs into `samples/` (gitignored) under these names:
+`GPO-Anual-report.pdf` (Report), `GEP-Jun-2026.pdf` (Long document), `iMac_PER_Oct2024.pdf` (Visual document).
+The first load of each embeds it, which counts against the free Gemini tier's ~1,000 embedding calls/day; the
+result is cached in `data/`, so later loads are free. Without the files the buttons just don't appear, and
+uploading works as normal.
+
+### Evaluation
+
+`eval/run_eval.py --mode <mode>` indexes the sample into a throwaway library and runs a fixed question set
+(15-21 questions each: core, extended and "not in the document" refusals). [docs/results/](docs/results/README.md)
+has the combined table, including Standard mode on the same documents for comparison. Current results:
+
+| Run | Result |
+|---|---|
+| Report on the GPO 2018 Annual Report | core 3/3, extended 8/8, refusals 4/4 |
+| Long document on the World Bank GEP (June 2026) | core 3/3, extended 8/8, refusals 4/4; 0/8 scoped questions got chunks from the wrong chapter or region |
+| Visual document on the iMac environmental report | 21/21 (Standard mode on the same report: 19/21) |
+
+Answer correctness is an automatic substring check and the question sets are small - a sanity check, not a
+benchmark. On plain prose (the GPO report) Standard mode answers just as correctly; Report's advantage there
+is page-tagged sources and clean refusals.
+
+The Long document outline for PDFs other than the reference report is a generic font-size heuristic, tested
+on synthetic PDFs only - best-effort. Roadmap and history: [docs/phases.md](docs/phases.md).
 
 For the full technical write-up (architecture, schema, API contract, and
 how each part was built and verified), see [docs/](docs/) - start with
@@ -86,5 +110,5 @@ uvicorn app.main:app --reload --port 8000
 pytest
 # Offline tests (store, embedding cache, engine) need no key. The smoke tests
 # make real Gemini calls and need GOOGLE_API_KEY. Tests use a throwaway data
-# folder, never your real library.
+# folder, never your real library. ~170 tests.
 ```

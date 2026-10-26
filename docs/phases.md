@@ -170,7 +170,7 @@ PDFs are **built-in samples, gitignored** (`samples/`), loadable with one click 
   run live: the first live run exposed a mid-table column-header problem (fixed by spelling out the rows under it) and
   two evaluation bugs of my own (a judge that matched characters; retrieval metrics that skipped the filter).
 
-### Phase 15 - Samples & evaluation
+### Phase 15 - Samples & evaluation  *(done - see progress.md)*
 - **Build:** `samples/` (gitignored PDFs) with a "Load sample" action per mode and pre-wired example
   questions; the prototypes' eval sets as `eval/` regression tests with a results table per mode.
 

@@ -30,13 +30,17 @@ RAG-Chatbot/
 │   ├── text_extract.py         # .txt/.md/.pdf -> plain text
 │   ├── vector_store.py         # local Chroma (cosine) + JSON document registry: CRUD + similarity search
 │   ├── rag_engine.py           # chunk -> embed -> store -> retrieve pipeline
+│   ├── cache_import.py         # seed the embedding cache from a prototype's stored vectors
 │   └── chat_session.py         # history + retrieval -> single Gemini call
+├── eval/                       # run_eval.py (per-mode evaluation), questions/*.json, summarize.py
+├── scripts/import_cache.py
+├── tests/                      # offline suite (+ golden snapshots, synthetic PDFs)
 ├── static/
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
 ├── data/                       # gitignored: modes/<mode>/{index/ (Chroma), documents.json}, embedding_cache.sqlite
-└── samples/                    # gitignored: reference PDFs (Part 2)
+└── samples/                    # gitignored: the three reference PDFs the "Load sample" buttons index
 ```
 
 ## Core Pipeline (what we're building)
