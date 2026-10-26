@@ -21,6 +21,8 @@ EMBEDDING_TIMEOUT = float(os.environ.get("EMBEDDING_TIMEOUT", "60"))
 # cache) lives under one local, gitignored folder - there is no database or
 # hosted service. Override DATA_DIR (e.g. in tests) to point it elsewhere.
 DATA_DIR = Path(os.environ.get("DATA_DIR") or ROOT / "data")
+# The reference PDFs each mode can load as a built-in sample (gitignored - copy them in; see README).
+SAMPLES_DIR = Path(os.environ.get("SAMPLES_DIR") or ROOT / "samples")
 
 _ENV_VALUES = {
     "GOOGLE_API_KEY": GOOGLE_API_KEY,

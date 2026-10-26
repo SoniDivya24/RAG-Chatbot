@@ -48,6 +48,8 @@ class LongDocumentProfile(Profile):
     label = "Long document"
     description = "Long structured documents: section-aware retrieval with managed context."
     extensions = (".pdf",)
+    sample_file = "GEP-Jun-2026.pdf"
+    sample_label = "World Bank Global Economic Prospects, June 2026"
     upload_hint = "Long PDFs organised into chapters and sections (100+ pages)."
     example_questions = (
         "What is the growth outlook for South Asia in this report?",

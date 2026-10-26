@@ -93,6 +93,8 @@ class ReportProfile(Profile):
     label = "Report"
     description = "Plain-text reports: page-aware answers with page citations."
     extensions = (".pdf",)
+    sample_file = "GPO-Anual-report.pdf"
+    sample_label = "GPO 2018 Annual Report"
     upload_hint = "PDF reports written in running text, such as an annual report."
     example_questions = (
         "How many depository libraries did GPO staff visit in FY 2018?",

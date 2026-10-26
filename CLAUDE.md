@@ -32,7 +32,7 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
   (local-only foundation) Phase 10 (pluggable pipeline + `mode` plumbing) and Phase 11 (the UI
-  mode switch), Phases 12-14 (Report, Visual document and Long document modes) are Done; Phase 15 (samples & evaluation) is next.**
+  mode switch), Phases 12-14 (Report, Visual document and Long document modes) are Done; Phase 15 (samples & evaluation) is built and awaiting the user's commit; Phase 16 (docs + demo video) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -100,7 +100,7 @@ Quick summary (see `README.md` for full detail and rationale):
   outline in `outline.py`. Eval 15/15 (`docs/results/long.md`) - read its notes: two checks were widened with the reason in
   `eval/questions/long.json`. `eval/run_eval.py` now judges correctly (a flat `must_contain` list = every string required)
   and measures retrieval through the mode's own filter.
-- Next: samples & evaluation (15), then docs and the demo video (16); see `docs/phases.md` Part 2
+- Next: docs and the demo video (16) (Phase 15 samples & evaluation built, uncommitted: `POST /api/sample`, rail "Load sample" button, `eval/summarize.py` -> `docs/results/README.md`, `tests/test_eval_questions.py`); see `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)
 

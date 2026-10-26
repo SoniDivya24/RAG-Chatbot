@@ -35,6 +35,9 @@ EMBEDDING_TIMEOUT=60  # embedding calls (enforced by the app; the library's own 
 - **Added:** `data/` (gitignored: Chroma index, parent stores, embedding cache, vision cache) and
   `samples/` (gitignored: the three reference PDFs - copy them in from
   `~/Desktop/ProjectData/RAG-Projects/GPO Annual Report/drive-download-20261022T103331Z-1-001/`).
+- **Sample file names** (the app looks for exactly these in `samples/`): `GPO-Anual-report.pdf` (Report),
+  `GEP-Jun-2026.pdf` (Long document), `iMac_PER_Oct2024.pdf` (Visual document). Override the folder with
+  `SAMPLES_DIR`. Without them the "Load sample" button simply doesn't appear; uploading works as normal.
 - **Still required:** `GOOGLE_API_KEY` (and optionally `CHAT_MODEL`, `EMBEDDING_MODEL`).
 - **Install quirk:** `pip install pymupdf` may attempt a source build and fail with an SSL error; use
   `--only-binary=:all:`. Import it as `pymupdf`.

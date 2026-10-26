@@ -25,6 +25,8 @@ class PagedTestProfile(StandardProfile):
     description = "test mode"
     extensions = (".txt",)
     min_score = 0.25
+    sample_file = "handbook.txt"
+    sample_label = "Test handbook"
 
     def chunk(self, extracted):
         pages = [p.strip() for p in extracted.split("\f") if p.strip()]
@@ -57,6 +59,10 @@ def api(tmp_path, fake_embedder, monkeypatch):
     profiles["planned"] = UnavailableProfile("planned", "Planned", "Not built yet.")
     test_modes = Modes(tmp_path / "data", fake_embedder, profiles)
     monkeypatch.setattr(main, "modes", test_modes)
+    samples = tmp_path / "samples"
+    samples.mkdir()
+    (samples / "handbook.txt").write_text("Intro page about the company mission.\fLeave policy: 18 days of paid vacation per year.")
+    monkeypatch.setattr(main.config, "SAMPLES_DIR", samples)
     main.limiter.reset()  # the rate limiter is process-wide state; start each test fresh
     llm = FakeLLM()
     for mode in ("standard", "paged"):
@@ -187,3 +193,59 @@ def test_modes_endpoint_carries_ui_presentation_data(api):
     assert "ENERGY STAR" in by_id["visual"]["exampleQuestions"][0]
     assert "depository libraries" in by_id["report"]["exampleQuestions"][0]
     assert all(m["uploadHint"] for m in by_id.values() if m["id"] not in ("paged", "planned"))  # the real modes
+
+
+# ---- built-in sample documents ---------------------------------------------------------------
+
+
+def test_modes_say_which_have_a_sample_and_whether_its_file_is_there(api):
+    by_id = {m["id"]: m for m in api.client.get("/api/modes").json()["modes"]}
+
+    assert by_id["paged"]["sample"] == {"label": "Test handbook", "present": True}
+    assert by_id["report"]["sample"] == {"label": "GPO 2018 Annual Report", "present": False}  # not in the temp folder
+    assert "sample" not in by_id["standard"]
+
+
+def test_loading_a_sample_indexes_it_into_that_mode_only(api):
+    res = api.client.post("/api/sample?mode=paged")
+
+    assert res.status_code == 200
+    (doc,) = res.json()["documents"]
+    assert doc["sourceName"] == "handbook.txt" and doc["chunkCount"] == 2 and doc["duplicate"] is False
+    assert [d["source_name"] for d in api.client.get("/api/documents?mode=paged").json()["documents"]] == ["handbook.txt"]
+    assert api.client.get("/api/documents?mode=standard").json()["documents"] == []
+
+
+def test_loading_the_sample_twice_is_detected_as_a_duplicate(api):
+    api.client.post("/api/sample?mode=paged")
+
+    again = api.client.post("/api/sample?mode=paged").json()["documents"][0]
+
+    assert again["duplicate"] is True
+    assert len(api.client.get("/api/documents?mode=paged").json()["documents"]) == 1
+
+
+def test_a_missing_sample_file_says_where_to_put_it(api):
+    res = api.client.post("/api/sample?mode=report")  # the profile names a file that isn't in the temp samples folder
+
+    assert res.status_code == 404
+    assert "GPO-Anual-report.pdf" in res.json()["error"] and "samples/" in res.json()["error"]
+
+
+def test_a_mode_without_a_sample_says_so(api):
+    res = api.client.post("/api/sample?mode=standard")
+
+    assert res.status_code == 404 and "no sample" in res.json()["error"]
+
+
+def test_the_caller_cannot_choose_which_file_is_loaded(api, tmp_path):
+    (tmp_path / "secret.txt").write_text("Do not index me.")
+
+    res = api.client.post("/api/sample?mode=paged&name=../secret.txt&file=/etc/passwd")
+
+    assert [d["sourceName"] for d in res.json()["documents"]] == ["handbook.txt"]  # the profile's file, always
+
+
+def test_sample_loading_validates_the_mode_like_every_other_route(api):
+    assert api.client.post("/api/sample?mode=nope").status_code == 400
+    assert api.client.post("/api/sample?mode=planned").status_code == 501

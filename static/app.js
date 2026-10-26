@@ -14,6 +14,7 @@ const els = {
   uploaderDropLabel: document.getElementById("uploader-drop-label"),
   uploaderInput: document.getElementById("uploader-input"),
   uploaderAlert: document.getElementById("uploader-alert"),
+  sampleBtn: document.getElementById("sample-btn"),
   libraryCount: document.getElementById("library-count"),
   libraryList: document.getElementById("library-list"),
   threadLog: document.getElementById("thread-log"),
@@ -339,6 +340,7 @@ function renderThread() {
 function renderLibrary(documents) {
   libraryHasDocuments = documents.length > 0;
   updateEmptyState();
+  renderSampleButton();
   els.libraryCount.textContent = `${documents.length} indexed`;
   els.libraryList.innerHTML = "";
   if (documents.length === 0) {
@@ -395,6 +397,56 @@ async function removeDocument(id) {
   }
 }
 
+// Tell the user what an upload (or sample load) did.
+function reportUpload(data, mode) {
+  if (data.documents?.length > 0) {
+    const fresh = data.documents.filter((d) => !d.duplicate).map((d) => d.sourceName);
+    const dupes = data.documents.filter((d) => d.duplicate).map((d) => d.sourceName);
+    if (mode === currentMode) {
+      if (fresh.length > 0) appendNote("system", `Added: ${fresh.join(", ")}.`);
+      if (dupes.length > 0) {
+        appendNote("system", `Already added (skipped re-indexing): ${dupes.join(", ")}.`);
+      }
+    }
+  }
+  if (data.errors?.length > 0) {
+    showAlert(data.errors.map((e) => `${e.sourceName}: ${e.error}`).join(" · "));
+  }
+}
+
+// The mode's built-in sample document (the server picks the file; the client only names the mode).
+async function loadSample() {
+  const mode = currentMode;
+  const label = modeInfo()?.sample?.label ?? "sample";
+  hideAlert();
+  els.sampleBtn.disabled = true;
+  els.sampleBtn.textContent = "Indexing sample...";
+  try {
+    const res = await fetch(apiUrl("/api/sample", mode), { method: "POST" });
+    const data = await res.json();
+    if (!res.ok && (!data.documents || data.documents.length === 0)) {
+      throw new Error(data.errors?.[0]?.error || data.error || `Couldn't load ${label}.`);
+    }
+    reportUpload(data, mode);
+    await refreshLibrary();
+  } catch (err) {
+    showAlert(err.message);
+  } finally {
+    els.sampleBtn.disabled = false;
+    renderSampleButton();
+  }
+}
+
+els.sampleBtn.addEventListener("click", loadSample);
+
+// Offer the sample only while this mode's library is empty and its file is actually on disk.
+function renderSampleButton() {
+  const sample = modeInfo()?.sample;
+  els.sampleBtn.hidden = !(sample?.present && !libraryHasDocuments);
+  els.sampleBtn.textContent = sample ? `Load sample: ${sample.label}` : "";
+  els.sampleBtn.title = sample ? `Index the built-in ${sample.label} so you can try ${modeLabel()} mode right away` : "";
+}
+
 // Shared by both the file picker and drag-and-drop - uploading happens the
 // moment files are provided, no separate "Add" step.
 async function uploadFiles(fileList) {
@@ -423,20 +475,7 @@ async function uploadFiles(fileList) {
       throw new Error(data.errors?.[0]?.error || data.error || "Upload failed.");
     }
 
-    if (data.documents?.length > 0) {
-      const fresh = data.documents.filter((d) => !d.duplicate).map((d) => d.sourceName);
-      const dupes = data.documents.filter((d) => d.duplicate).map((d) => d.sourceName);
-      if (mode === currentMode) {
-        if (fresh.length > 0) appendNote("system", `Added: ${fresh.join(", ")}.`);
-        if (dupes.length > 0) {
-          appendNote("system", `Already added (skipped re-indexing): ${dupes.join(", ")}.`);
-        }
-      }
-    }
-    if (data.errors?.length > 0) {
-      showAlert(data.errors.map((e) => `${e.sourceName}: ${e.error}`).join(" · "));
-    }
-
+    reportUpload(data, mode);
     await refreshLibrary();
   } catch (err) {
     showAlert(err.message);
@@ -725,6 +764,7 @@ function setMode(id, { updateHash = true } = {}) {
   hideAlert();
   thread = loadThread(id);
   libraryHasDocuments = false;
+  els.sampleBtn.hidden = true;
   // Don't leave the previous mode's documents on screen while this mode's load.
   els.libraryCount.textContent = "…";
   els.libraryList.innerHTML = '<li class="rail__empty">Loading documents…</li>';

@@ -76,6 +76,11 @@ class Modes:
                 "uploadHint": profile.upload_hint,
                 "exampleQuestions": list(profile.example_questions),
             }
+            if profile.sample_file:
+                info["sample"] = {
+                    "label": profile.sample_label,
+                    "present": (config.SAMPLES_DIR / profile.sample_file).is_file(),
+                }
             if profile.available:
                 info["documentCount"] = len(self.engine(profile.id).list_documents())
             modes.append(info)

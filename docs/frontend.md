@@ -56,4 +56,8 @@ scenario RAGs, in one component (no separate pages):
   shown in the wrong conversation.
 - On phones the control becomes a 2 x 2 grid (a sideways-scrolling row would hide the last mode); the
   description wraps under it.
-- Each mode's **Load sample document** action arrives with the samples (Phase 15).
+- Each mode with a built-in sample shows a dashed **Load sample: <name>** button on the rail while its library is
+  empty and the file is present in `samples/` (`GET /api/modes` reports `sample: {label, present}`). It calls
+  `POST /api/sample?mode=`; the server picks the file from the mode's profile, so a caller can't name a path.
+  Standard has no sample. A fresh clone must copy the PDFs into `samples/` (see `setup.md`); the first load
+  embeds them, which is quota-bound on the free Gemini tier - later loads reuse the local embedding cache.

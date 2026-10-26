@@ -31,6 +31,8 @@ class VisualProfile(Profile):
     label = "Visual document"
     description = "Documents whose facts live in tables, charts and footnotes."
     extensions = (".pdf",)
+    sample_file = "iMac_PER_Oct2024.pdf"
+    sample_label = "Apple iMac Product Environmental Report"
     upload_hint = "Short PDFs whose facts sit in tables, charts and footnotes."
     example_questions = (
         "How much less energy does iMac use compared to the ENERGY STAR requirement?",

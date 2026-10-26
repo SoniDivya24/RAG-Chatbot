@@ -151,6 +151,33 @@ async def upload(
     return JSONResponse(status_code=status_code, content={"documents": loaded, "errors": errors})
 
 
+@app.post("/api/sample")
+@limiter.limit("10/minute")
+async def load_sample(request: Request, mode: str | None = None) -> JSONResponse:
+    """Index the mode's built-in sample document (same response shape as /api/upload)."""
+    engine = _engine(mode)
+    profile = engine.profile
+    if not profile.sample_file:
+        raise HTTPException(status_code=404, detail=f"The {profile.label} mode has no sample document.")
+    path = config.SAMPLES_DIR / profile.sample_file  # a name fixed by the profile, not by the caller
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f"The sample file {profile.sample_file} isn't in the samples/ folder - copy it there (see the README).",
+        )
+    try:
+        doc = engine.load_file(path.read_bytes(), path.name)
+    except Exception as exc:
+        return JSONResponse(status_code=400, content={"documents": [], "errors": [{"sourceName": path.name, "error": str(exc)}]})
+    loaded = {
+        "id": doc["id"],
+        "sourceName": doc["source_name"],
+        "chunkCount": doc["chunk_count"],
+        "duplicate": doc.get("duplicate", False),
+    }
+    return JSONResponse(content={"documents": [loaded], "errors": []})
+
+
 @app.post("/api/chat")
 @limiter.limit("20/minute")
 async def chat(request: Request) -> dict:

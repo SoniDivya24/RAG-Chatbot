@@ -39,6 +39,10 @@ class Profile(ABC):
     # Shown by the UI for this mode: what to upload, and questions worth trying.
     upload_hint: str = ""
     example_questions: tuple[str, ...] = ()
+    # A built-in sample document for this mode: a file name inside the samples folder (never a path
+    # from a request) and a human label. None means the mode has no sample.
+    sample_file: str | None = None
+    sample_label: str = ""
 
     retrieval_k: int = 5
     # Chunks scoring below this cosine similarity are noise, not real matches.
