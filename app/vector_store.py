@@ -1,25 +1,61 @@
-from app.supabase_client import get_supabase
+import json
+import os
+import threading
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 
-INSERT_BATCH_SIZE = 200  # keep individual PostgREST payloads small
+import chromadb
+from chromadb.config import Settings
+
+from app import config
+
+COLLECTION = "chunks"
+ADD_BATCH_SIZE = 500
 
 
-class SupabaseVectorStore:
-    """Persistent vector store backed by Supabase Postgres + pgvector. Chunks
-    from every uploaded document are kept in one `chunks` table and searched
-    together, so retrieval spans all documents ever uploaded, not just the
-    most recent one.
+class LocalVectorStore:
+    """Persistent, local vector store: Chroma (cosine) for the chunks plus a
+    small JSON registry for the documents. Chunks from every uploaded
+    document live in one collection and are searched together, so retrieval
+    spans all documents, not just the most recent one.
+
+    Everything sits under one folder (default `data/`, gitignored). There is
+    no server and no cloud dependency; delete the folder to reset.
     """
 
-    def find_by_content_hash(self, content_hash: str) -> dict | None:
-        supabase = get_supabase()
-        res = (
-            supabase.table("documents")
-            .select("id, source_name, chunk_count, created_at")
-            .eq("content_hash", content_hash)
-            .limit(1)
-            .execute()
+    def __init__(self, path: Path | None = None) -> None:
+        self.path = Path(path or config.DATA_DIR)
+        self.path.mkdir(parents=True, exist_ok=True)
+        self._registry_path = self.path / "documents.json"
+        self._lock = threading.Lock()
+        # Telemetry off: a local-only app shouldn't phone home.
+        self._client = chromadb.PersistentClient(
+            path=str(self.path / "index"), settings=Settings(anonymized_telemetry=False)
         )
-        return res.data[0] if res.data else None
+        self._collection = self._client.get_or_create_collection(
+            COLLECTION, configuration={"hnsw": {"space": "cosine"}}
+        )
+
+    # -- document registry --------------------------------------------
+
+    def _read_registry(self) -> dict[str, dict]:
+        if not self._registry_path.exists():
+            return {}
+        return json.loads(self._registry_path.read_text())
+
+    def _write_registry(self, registry: dict[str, dict]) -> None:
+        # Write-then-replace so a crash mid-write can't corrupt the registry.
+        tmp = self._registry_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(registry, indent=2))
+        os.replace(tmp, self._registry_path)
+
+    def find_by_content_hash(self, content_hash: str) -> dict | None:
+        with self._lock:
+            for doc in self._read_registry().values():
+                if doc["content_hash"] == content_hash:
+                    return self._public(doc)
+        return None
 
     def add_document(
         self,
@@ -28,75 +64,85 @@ class SupabaseVectorStore:
         embedding_vectors: list[list[float]],
         content_hash: str,
     ) -> dict:
-        supabase = get_supabase()
-        doc_res = (
-            supabase.table("documents")
-            .insert(
-                {
-                    "source_name": source_name,
-                    "chunk_count": len(chunk_texts),
-                    "content_hash": content_hash,
-                }
-            )
-            .execute()
-        )
-        doc = doc_res.data[0]
+        doc = {
+            "id": str(uuid.uuid4()),
+            "source_name": source_name,
+            "chunk_count": len(chunk_texts),
+            "content_hash": content_hash,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        try:
+            for i in range(0, len(chunk_texts), ADD_BATCH_SIZE):
+                end = min(i + ADD_BATCH_SIZE, len(chunk_texts))
+                self._collection.add(
+                    ids=[f"{doc['id']}:{n}" for n in range(i, end)],
+                    documents=chunk_texts[i:end],
+                    embeddings=embedding_vectors[i:end],
+                    metadatas=[
+                        {
+                            "document_id": doc["id"],
+                            "chunk_index": n,
+                            "source": source_name,
+                        }
+                        for n in range(i, end)
+                    ],
+                )
+        except Exception as exc:
+            # Roll back the partial insert so a failed upload doesn't leave
+            # orphaned chunks with no registry entry.
+            self._collection.delete(where={"document_id": doc["id"]})
+            raise RuntimeError(f"Failed to save chunks: {exc}") from exc
 
-        rows = [
-            {
-                "document_id": doc["id"],
-                "chunk_index": i,
-                "content": content,
-                "embedding": embedding_vectors[i],
-            }
-            for i, content in enumerate(chunk_texts)
-        ]
-
-        for i in range(0, len(rows), INSERT_BATCH_SIZE):
-            batch = rows[i : i + INSERT_BATCH_SIZE]
-            try:
-                supabase.table("chunks").insert(batch).execute()
-            except Exception as exc:
-                # Roll back the partial insert so a failed upload doesn't leave
-                # an orphaned documents row with no (or partial) chunks.
-                supabase.table("documents").delete().eq("id", doc["id"]).execute()
-                raise RuntimeError(f"Failed to save chunks: {exc}") from exc
-
-        return doc
+        with self._lock:
+            registry = self._read_registry()
+            registry[doc["id"]] = doc
+            self._write_registry(registry)
+        return self._public(doc)
 
     def list_documents(self) -> list[dict]:
-        supabase = get_supabase()
-        res = (
-            supabase.table("documents")
-            .select("id, source_name, chunk_count, created_at")
-            .order("created_at", desc=True)
-            .execute()
-        )
-        return res.data
+        with self._lock:
+            docs = list(self._read_registry().values())
+        docs.sort(key=lambda d: d["created_at"], reverse=True)
+        return [self._public(d) for d in docs]
 
     def delete_document(self, document_id: str) -> None:
-        supabase = get_supabase()
-        supabase.table("documents").delete().eq("id", document_id).execute()
+        self._collection.delete(where={"document_id": document_id})
+        with self._lock:
+            registry = self._read_registry()
+            if registry.pop(document_id, None) is not None:
+                self._write_registry(registry)
 
     def count_chunks(self) -> int:
-        supabase = get_supabase()
-        res = supabase.table("chunks").select("id", count="exact").execute()
-        return res.count or 0
+        return self._collection.count()
 
     def similarity_search(self, query_embedding: list[float], k: int = 5) -> list[dict]:
-        supabase = get_supabase()
-        res = supabase.rpc(
-            "match_chunks", {"query_embedding": query_embedding, "match_count": k}
-        ).execute()
+        if self._collection.count() == 0:
+            return []
+        res = self._collection.query(
+            query_embeddings=[query_embedding],
+            n_results=min(k, self._collection.count()),
+        )
         return [
             {
-                "text": row["content"],
-                "score": row["similarity"],
+                "text": text,
+                "score": 1 - distance,  # cosine distance -> similarity
                 "metadata": {
-                    "source": row["source_name"],
-                    "document_id": row["document_id"],
-                    "chunk_index": row["chunk_index"],
+                    "source": meta["source"],
+                    "document_id": meta["document_id"],
+                    "chunk_index": meta["chunk_index"],
                 },
             }
-            for row in res.data
+            for text, meta, distance in zip(
+                res["documents"][0], res["metadatas"][0], res["distances"][0]
+            )
         ]
+
+    @staticmethod
+    def _public(doc: dict) -> dict:
+        """The shape callers see (no internal content hash)."""
+        return {
+            "id": doc["id"],
+            "source_name": doc["source_name"],
+            "chunk_count": doc["chunk_count"],
+            "created_at": doc["created_at"],
+        }

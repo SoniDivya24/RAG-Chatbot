@@ -1,17 +1,16 @@
 import hashlib
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from app import config
-from app.vector_store import SupabaseVectorStore
+from app.embeddings import CachedEmbedder
+from app.vector_store import LocalVectorStore
 
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 RETRIEVAL_K = 5
 
 # Chunks scoring below this cosine similarity are treated as noise, not real
-# matches: pgvector always returns the top-k closest chunks even when none of
+# matches: a vector search always returns the top-k closest chunks even when none of
 # them are actually relevant (e.g. an off-topic question with documents
 # uploaded), and those shouldn't be sent to the LLM as context or shown to the
 # user as "sources" for an answer they didn't actually inform.
@@ -25,20 +24,18 @@ class RagEngine:
     not just one document.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        store: LocalVectorStore | None = None,
+        embedder: CachedEmbedder | None = None,
+    ) -> None:
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
         )
-        self._embeddings: GoogleGenerativeAIEmbeddings | None = None
-        self.store = SupabaseVectorStore()
-
-    @property
-    def embeddings(self) -> GoogleGenerativeAIEmbeddings:
-        # Lazy so importing this module doesn't require GOOGLE_API_KEY to be set.
-        if self._embeddings is None:
-            config.require("GOOGLE_API_KEY")
-            self._embeddings = GoogleGenerativeAIEmbeddings(model=config.EMBEDDING_MODEL)
-        return self._embeddings
+        # Both are injectable so tests can use a throwaway data folder and a
+        # fake embedder; the app uses the defaults (local `data/` + Gemini).
+        self.store = store or LocalVectorStore()
+        self.embedder = embedder or CachedEmbedder()
 
     def chunk_text(self, text: str) -> list[str]:
         chunks = self.splitter.split_text(text)
@@ -47,12 +44,12 @@ class RagEngine:
         return chunks
 
     def embed_chunks(self, chunks: list[str]) -> list[list[float]]:
-        vectors = self.embeddings.embed_documents(chunks)
+        vectors = self.embedder.embed_documents(chunks)
         self._assert_valid_embeddings(vectors)
         return vectors
 
     def embed_query(self, question: str) -> list[float]:
-        vector = self.embeddings.embed_query(question)
+        vector = self.embedder.embed_query(question)
         self._assert_valid_embeddings([vector])
         return vector
 
@@ -106,7 +103,8 @@ class RagEngine:
         # langchain-google-genai can swallow embedding API errors (invalid key,
         # quota, bad model name) and resolve with empty vectors instead of
         # raising - fail loudly here rather than let that turn into silent,
-        # meaningless similarity scores downstream.
+        # meaningless similarity scores downstream (the embedder leaves such
+        # vectors empty rather than caching them).
         if any(not v for v in vectors):
             raise RuntimeError(
                 "Embedding request failed (returned empty vectors). Check that "

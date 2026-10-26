@@ -26,3 +26,19 @@ Two-panel single page, vanilla HTML/CSS/JS, served as static files by FastAPI.
 - Chat history in `localStorage`
 - Document list + counts re-fetched from `/api/documents` and `/api/status` after every
   upload/delete
+
+## Mode switch (planned, Part 2 - Phase 11)
+
+A **segmented control** in the masthead switches the whole app between the normal RAG and the three
+scenario RAGs, in one component (no separate pages):
+
+`[ Standard ] [ Report ] [ Long document ] [ Visual document ]`  *(working labels - to confirm)*
+
+- The selected mode scopes **everything below it**: the sidebar document list and counts, the upload
+  target (and the file hint, e.g. "long PDF with chapters"), the chat history (kept per mode in
+  `localStorage`), the empty-state text and a row of **example-question chips** for that mode.
+- A small badge on each assistant answer names the mode that produced it.
+- The **Sources panel** gains metadata beyond filename + score: **page**, **section / heading path**
+  and **element type** (text, table, chart, footnote, call-out), so the three techniques are visible.
+- Each mode offers **Load sample document** (built-in sample PDFs, gitignored).
+- Keyboard/URL: the active mode is reflected in the URL hash so a mode can be linked or reloaded.

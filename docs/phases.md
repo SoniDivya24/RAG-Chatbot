@@ -70,7 +70,7 @@ need nothing from you and can run immediately.
 - **Needed from you:** a look/feel review - does the chat experience feel right, are
   there edge cases you want tested that I wouldn't think to try.
 
-## Phase 7 - Deployment (Render)
+## Phase 7 - Deployment (Render) - **superseded 2026-10-26** (see Part 2; the app is going local-only)
 - **Goal:** live, publicly reachable demo.
 - **Build:** finalize `render.yaml`, connect the GitHub repo to a Render web service,
   set env vars in the Render dashboard.
@@ -83,6 +83,82 @@ need nothing from you and can run immediately.
 - **Goal:** pick from [backlog.md](backlog.md) based on remaining time/interest, once
   the core system (Phases 0-7) is solid.
 - **Needed from you:** which backlog item(s) to prioritize, if any.
+
+## Part 2 - Local-only, multi-mode RAG (direction change, 2026-10-26)
+
+Phases 0-8 above built and shipped the original app (Supabase + Render). The user then clarified
+that three extra document scenarios (a plain-text report, a long structured report, a visual
+report full of tables/charts/footnotes) were meant to be built **in this app**, which should also
+become **local-only**. The sibling repos `../RAG-GPO-Annual-Report`, `../RAG-World-Bank-Economic-Report`
+and `../RAG-iMac-Environmental-Report` hold working prototypes of the three techniques (about
+2,200 lines) - **port from them, read-only; the user manages those repos**. Phase 7 (Render) is
+superseded and is retired in Phase 9.
+
+**Product shape (agreed with the user):** one app with a **mode switch** - a segmented control in the
+UI to flip between the **normal RAG** and the **three scenario RAGs** in one component. Working labels:
+**Standard** (today's behaviour), **Report** (plain-text report), **Long document** (hierarchical,
+section-aware), **Visual document** (tables, charts, footnotes). Each mode has its **own library and
+index** and its own ingestion + retrieval pipeline; uploads go to the selected mode; chat queries that
+mode's library only; history is kept per mode. Modes are chosen explicitly (no auto-detection for now).
+
+**Stack for Part 2:** Chroma on local disk under `data/` (gitignored) replaces Supabase; the Render
+config goes; Gemini stays for chat, embeddings and chart vision, with an **on-disk embedding cache** so
+the same text is never embedded twice (the free tier caps embeddings at ~1000/day). The three reference
+PDFs are **built-in samples, gitignored** (`samples/`), loadable with one click per mode.
+
+### Phase 9 - Local-only foundation
+- **Goal:** the existing app runs entirely locally, nothing else changes for the user.
+- **Build:** a local vector store (Chroma + a small document registry) behind the same interface the
+  engine uses today; keep list / delete / duplicate detection by content hash; add the embedding disk
+  cache; remove `render.yaml`, `supabase/`, `app/supabase_client.py`, the Supabase MCP config and
+  dependencies, and the Supabase/Render docs; update tests and `setup.md`. Existing cloud data and the
+  Render service are **not** touched by this work - shutting them down is the user's call.
+- **Done when:** upload / chat / list / delete / dedup work against the local store, tests pass, and the
+  app starts with only `GOOGLE_API_KEY` set.
+- **Needed from you:** nothing; later, whether to decommission the Supabase project and Render service.
+
+### Phase 10 - Pluggable pipeline & mode plumbing (backend)
+- **Goal:** a mode is a pluggable profile: how a document is extracted/chunked/indexed and how context
+  is assembled; Standard is the first profile.
+- **Build:** a `Profile` interface (extract -> chunks with metadata -> index -> retrieve -> assemble
+  context), one Chroma collection and registry per mode, a rich chunk record (page, section/heading
+  path, element kind, parent id), `mode` accepted by `/api/upload`, `/api/documents`, `/api/chat`,
+  `/api/status`, sources returned with that metadata. Standard behaves exactly as before.
+- **Needed from you:** nothing.
+
+### Phase 11 - Mode switch in the UI
+- **Goal:** the segmented control that moves between Standard and the three scenario modes.
+- **Build:** the control in the masthead (see [frontend.md](frontend.md)), per-mode document list /
+  upload target / chat history / empty state, example-question chips per mode, a Sources panel that
+  shows page, section and element type. Verified in headless Chromium.
+- **Needed from you:** a look/feel review; final labels for the four segments.
+
+### Phase 12 - Report mode (port of the GPO prototype)
+- **Build:** per-page extraction with running-head stripping, page-tagged chunks, relevance floor,
+  page-cited grounded prompt with exact refusal. Eval: 3 core + extended + refusal questions.
+
+### Phase 13 - Visual document mode (port of the iMac prototype)
+- **Build:** PyMuPDF geometry for tables (rebuilt under header bars), footnote markers linked to
+  endnotes, call-out grouping, chart description via Gemini vision (cached), element-typed chunks.
+  Eval: the 21-question set, reported per content type.
+
+### Phase 14 - Long document mode (port of the World Bank prototype)
+- **Build:** font-based structure -> section hierarchy, parent/child chunks, region/chapter filters
+  (derived from the document's own headings rather than a hard-coded list), context assembly with a
+  token budget, table-aware chunks. Eval: 3 core + extended + refusals. Needs the ~1,000-embedding
+  index: reuse the prototype's embedding cache, and expect to spread any remainder over the daily cap.
+
+### Phase 15 - Samples & evaluation
+- **Build:** `samples/` (gitignored PDFs) with a "Load sample" action per mode and pre-wired example
+  questions; the prototypes' eval sets as `eval/` regression tests with a results table per mode.
+
+### Phase 16 - Docs & demo video
+- **Build:** README refresh (modes, local setup, how to load samples), `docs/` brought up to date, and a
+  revised `demo-video/script.md` showing Standard plus the three scenarios (review with the user before
+  recording). Submission: repo URL + the video; no hosting.
+
+**Order and risk:** 9 and 10 are prerequisites; then 12 (simplest) -> 13 -> 14 (largest, quota-bound).
+Phase 11 can start as soon as 10 exposes `mode`. Each phase is verified live before being marked Done.
 
 Current phase-by-phase status lives in [progress.md](progress.md). Decision/reasoning
 history lives in `.claude/status-log.md` (local only, gitignored). This file stays

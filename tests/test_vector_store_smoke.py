@@ -1,7 +1,7 @@
-"""Smoke test: full load -> retrieve -> delete cycle against the live Supabase
-project. Real network calls (Gemini + Supabase), not a unit test - run
-manually while verifying setup, per docs/phases.md Phase 3. Cleans up after
-itself so it doesn't leave test data behind.
+"""Smoke test: full load -> retrieve -> delete cycle against the live Gemini
+embeddings API and the local store (a throwaway data folder, see conftest.py).
+Real network calls, not a unit test - run manually while verifying setup, per
+docs/phases.md Phase 3. Cleans up after itself.
 """
 
 from app.rag_engine import RagEngine
@@ -31,7 +31,7 @@ def test_load_retrieve_and_delete_document():
         assert 0.0 <= results[0]["score"] <= 1.0
     finally:
         if doc is not None:
-            engine.delete_document(doc["id"])  # cascades to chunks
+            engine.delete_document(doc["id"])  # removes its chunks too
 
 
 def test_duplicate_content_is_not_reindexed():

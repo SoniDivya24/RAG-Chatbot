@@ -6,8 +6,8 @@ Upload your own documents and ask questions about them — answers are grounded 
 what you actually uploaded, with the exact source passages shown alongside every
 reply.
 
-**[Try the live demo →](https://rag-chatbot-4p6g.onrender.com)**
-*(free tier - spins down after 15 min idle, first request after that can take ~30-60s to wake up)*
+**Runs entirely on your machine** - the index, your documents' text and the
+embedding cache all live in a local `data/` folder. No database, no hosting.
 
 </div>
 
@@ -34,15 +34,21 @@ reply.
 ## How it works
 
 ```
-upload → extract text → chunk → embed (Gemini) → store (Supabase/pgvector)
+upload → extract text → chunk → embed (Gemini, cached on disk) → store (local Chroma index)
                                                         ↓
 your question → embed → similarity search → relevant chunks → grounded answer (Gemini)
 ```
 
 Built with **Python + FastAPI** on the backend, **LangChain + Google Gemini**
-for chat and embeddings, **Supabase (Postgres + pgvector)** as the vector
-store, and a **vanilla HTML/CSS/JS** frontend - no frontend framework, no
-build step. Deployed on **Render**.
+for chat and embeddings, a **local Chroma** vector index (plus a small JSON
+document registry and a SQLite embedding cache, all under `data/`), and a
+**vanilla HTML/CSS/JS** frontend - no frontend framework, no build step.
+Gemini is the only external service; nothing is deployed.
+
+> **Roadmap:** the app is gaining a **mode switch** between this standard RAG
+> and three document-specific RAGs (plain-text reports, long structured
+> reports, and tables/charts/footnotes) - see Part 2 of
+> [docs/phases.md](docs/phases.md).
 
 For the full technical write-up (architecture, schema, API contract, and
 how each part was built and verified), see [docs/](docs/) - start with
@@ -56,9 +62,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Fill in .env.local with GOOGLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-# - see docs/setup.md for the full list. Also run supabase/schema.sql against
-# your Supabase project first (SQL Editor, or the Supabase MCP server).
+# Put GOOGLE_API_KEY (and optionally CHAT_MODEL) in .env.local - that's the
+# only credential needed. See docs/setup.md for the full list.
 
 uvicorn app.main:app --reload --port 8000
 # -> open http://localhost:8000
@@ -66,7 +71,7 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 pytest
-# 16 tests - most make real network calls (Gemini + Supabase), so
-# GOOGLE_API_KEY / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY need to be set
-# and the schema already applied.
+# Offline tests (store, embedding cache, engine) need no key. The smoke tests
+# make real Gemini calls and need GOOGLE_API_KEY. Tests use a throwaway data
+# folder, never your real library.
 ```

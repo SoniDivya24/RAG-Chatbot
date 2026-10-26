@@ -1,5 +1,11 @@
 # Stack Decision
 
+> **Direction change (2026-10-26):** the stack below describes the app as shipped (Supabase pgvector +
+> Render). It is being replaced, in [Part 2 of phases.md](phases.md): **vector store -> Chroma on local
+> disk (`data/`, gitignored); no Supabase, no Render/hosting; PDF parsing gains PyMuPDF; an on-disk
+> embedding cache is added**. Gemini stays for chat, embeddings and chart vision. Groq was offered as an
+> extra provider and is *not* needed now (see backlog). Rows below are updated as each phase lands.
+
 ## References
 
 - **Concept reference (the actual spec we're extending):**

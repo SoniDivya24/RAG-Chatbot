@@ -2,6 +2,13 @@
 .claude/
 .mcp.json
 
+# Demo video production (script, recordings, audio) - local only, never committed
+demo-video/
+
+# Local data (vector index, document registry, embedding cache) and sample PDFs - rebuilt/copied locally, never committed
+data/
+samples/
+
 # Environment/secrets
 .env
 .env.local

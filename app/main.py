@@ -12,8 +12,8 @@ from app.chat_session import ChatSession
 from app.rag_engine import RagEngine
 from app.text_extract import extract_text
 
-# Only GOOGLE_API_KEY is required this early - Supabase-backed routes validate
-# their own required keys lazily when first used.
+# GOOGLE_API_KEY is the only credential the app needs: the index, the document
+# registry and the embedding cache are all local files under data/.
 config.require("GOOGLE_API_KEY")
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -66,6 +66,7 @@ async def status() -> dict:
     return {
         "status": "ok",
         "chatModel": config.CHAT_MODEL,
+        "storage": "local",
         "documentCount": len(rag_engine.list_documents()),
         "chunkCount": rag_engine.count_chunks(),
     }

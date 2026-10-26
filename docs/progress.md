@@ -14,7 +14,20 @@ next - update it the moment a phase starts or finishes, don't batch it for later
 | 5 - Frontend | Done | Two-panel UI + expandable sources, verified in a real headless-Chromium browser session |
 | 6 - Local End-to-End Verification | Done | Full pass via headless browser; found + fixed a mobile CSS bug. Open: user's own look/feel review, whenever convenient |
 | 7 - Deployment (Render) | Done | Live at https://rag-chatbot-4p6g.onrender.com, tracking `main` (switched from `dev`). Verified (status/upload/chat/grounding/delete) |
-| 8 - Creative Extensions | Not started | Optional, post-MVP |
+| 8 - Creative Extensions | Superseded | Replaced by Part 2 below |
+| 9 - Local-only foundation | Done | `app/vector_store.py` (Chroma cosine + JSON registry in `data/`), `app/embeddings.py` (SQLite cache, paced batches, retries, fails fast on the daily quota), engine/config/main updated; `render.yaml`, `supabase/`, `app/supabase_client.py` and the `supabase` dependency removed. 37 tests pass (26 offline + live Gemini; tests use a throwaway data folder). Verified on a real server: upload, grounded chat, **restart keeps the library**, duplicate skipped, delete. The cloud Supabase project and Render service were not touched - retiring them is the user's call |
+| 10 - Pluggable pipeline & mode plumbing | Not started | **Next.** `Profile` interface, one collection per mode, rich chunk metadata, `mode` in the API |
+| 11 - Mode switch in the UI | Not started | Segmented control: Standard / Report / Long document / Visual document |
+| 12 - Report mode (GPO port) | Not started | |
+| 13 - Visual document mode (iMac port) | Not started | |
+| 14 - Long document mode (World Bank port) | Not started | |
+| 15 - Samples & evaluation | Not started | `samples/` gitignored PDFs; eval sets as regression tests |
+| 16 - Docs & demo video | Not started | Revised video script to review before recording |
+
+**Direction change (2026-10-26):** the app is becoming **local-only** (no Supabase, no Render) and gains
+a **mode switch** between the normal RAG and three scenario RAGs (plain-text report, long structured
+document, visual document). Details and rationale: Part 2 of [phases.md](phases.md). Phase 7's deployed
+Render app still exists until the user retires it.
 
 **Post-MVP polish (post-Phase 7, ongoing as needed):** full UI redesign (themeable
 accent colors, popover theme switcher, blue-grey masthead, floating toast errors,

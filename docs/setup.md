@@ -3,28 +3,36 @@
 ## Setup Checklist (things we need from you / to configure)
 
 - [ ] **Gemini API key** - from https://aistudio.google.com/app/apikey → `GOOGLE_API_KEY`
-- [ ] **Supabase project** - new project at https://supabase.com →
-  - `SUPABASE_URL` (Project Settings → API)
-  - `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API - **secret, server-only, never sent to browser**)
-  - Run `supabase/schema.sql` in the SQL Editor once `pgvector` extension is enabled
-- [ ] **Render account** - for deployment; env vars set in Render dashboard (encrypted)
 - [ ] **.env.local** - created locally (see Environment Variables below), gitignored,
-  holds real keys - there is no committed `.env.example` template; this list is the
+  holds the key - there is no committed `.env.example` template; this list is the
   reference for what to put in it
-- [ ] **.gitignore** - `.venv/`, `__pycache__/`, `.env.local`, `.env`
+- [ ] **.gitignore** - `.venv/`, `__pycache__/`, `.env.local`, `.env`, `data/`, `samples/`
 - [ ] **requirements.txt** - dependencies from [stack.md](stack.md)
 - [ ] **.claude/** - project-level Claude Code config (added as needed; not blocking)
+
+No database, no Supabase project, no hosting account: everything the app stores lives in `data/`.
 
 ## Environment Variables
 
 ```
 # Required
 GOOGLE_API_KEY=
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
 
 # Optional (defaults shown)
 CHAT_MODEL=gemini-3.1-flash-lite
 EMBEDDING_MODEL=models/gemini-embedding-001
 PORT=8000
+DATA_DIR=            # defaults to ./data (vector index, documents.json, embedding_cache.sqlite)
 ```
+
+## Part 2 changes (local-only, 2026-10-26 - Phase 9)
+
+- **Removed:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, the Supabase project/schema step, the Render
+  account/deploy step, and the Supabase MCP (`.mcp.json`, `SUPABASE_ACCESS_TOKEN`). Nothing is deployed.
+- **Added:** `data/` (gitignored: Chroma index, parent stores, embedding cache, vision cache) and
+  `samples/` (gitignored: the three reference PDFs - copy them in from
+  `~/Desktop/ProjectData/RAG-Projects/GPO Annual Report/drive-download-20261022T103331Z-1-001/`).
+- **Still required:** `GOOGLE_API_KEY` (and optionally `CHAT_MODEL`, `EMBEDDING_MODEL`).
+- **Install quirk:** `pip install pymupdf` may attempt a source build and fail with an SSL error; use
+  `--only-binary=:all:`. Import it as `pymupdf`.
+- **Free-tier limit:** ~1000 Gemini embedding requests/day; the embedding cache avoids repeats.
