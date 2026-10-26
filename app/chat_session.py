@@ -4,7 +4,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app import config
 from app.rag_engine import RagEngine
 
-RETRIEVAL_K = 5
 MAX_HISTORY_TURNS = 20
 
 
@@ -43,24 +42,15 @@ class ChatSession:
 
     def ask(self, user_message: str, history: list[dict] | None = None) -> dict:
         history = history or []
+        profile = self.rag_engine.profile
         has_documents = self.rag_engine.has_documents()
-        relevant_chunks = (
-            self.rag_engine.retrieve(user_message, RETRIEVAL_K) if has_documents else []
-        )
-        context = "\n\n".join(chunk["text"] for chunk in relevant_chunks)
+        relevant_chunks = self.rag_engine.retrieve(user_message) if has_documents else []
 
         if relevant_chunks:
-            system_content = (
-                "You are a helpful assistant answering questions about the uploaded "
-                "documents. Use the CONTEXT below if it's relevant to the question. "
-                "If the answer isn't in the context AND isn't something already "
-                "established earlier in this conversation, say you don't have that "
-                "information in the documents. Do not make up details. Answer "
-                "directly - do not add meta-commentary about which documents are "
-                "or aren't in scope, how many were provided, or reminders to upload "
-                "more, unless the user explicitly asks what's available.\n\n"
-                f"CONTEXT:\n{context}"
-            )
+            # The mode's profile decides how hits become context and which
+            # grounding instructions frame them.
+            context = profile.format_context(relevant_chunks)
+            system_content = f"{profile.grounded_instructions}\n\nCONTEXT:\n{context}"
         elif has_documents:
             # Documents exist, but nothing relevant enough to this specific
             # message was found (retrieve() already filtered out low-score
@@ -116,12 +106,5 @@ class ChatSession:
 
         return {
             "reply": reply,
-            "sources": [
-                {
-                    "text": chunk["text"],
-                    "score": chunk["score"],
-                    "source": chunk["metadata"].get("source"),
-                }
-                for chunk in relevant_chunks
-            ],
+            "sources": [profile.source_payload(chunk) for chunk in relevant_chunks],
         }

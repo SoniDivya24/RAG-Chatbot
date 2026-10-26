@@ -13,6 +13,25 @@ from app import config
 COLLECTION = "chunks"
 ADD_BATCH_SIZE = 500
 
+# Metadata every chunk always carries; profile-supplied extras (page, section,
+# kind, parent id, ...) can't overwrite these.
+RESERVED_METADATA = {"document_id", "chunk_index", "source"}
+
+
+def _clean_metadata(meta: dict | None) -> dict:
+    """Chroma accepts only str / int / float / bool values: drop None and
+    flatten lists so a profile can pass natural Python values."""
+    clean = {}
+    for key, value in (meta or {}).items():
+        if key in RESERVED_METADATA or value is None:
+            continue
+        if isinstance(value, (list, tuple, set)):
+            value = ", ".join(str(v) for v in value)
+        if not isinstance(value, (str, int, float, bool)):
+            value = str(value)
+        clean[key] = value
+    return clean
+
 
 class LocalVectorStore:
     """Persistent, local vector store: Chroma (cosine) for the chunks plus a
@@ -63,6 +82,7 @@ class LocalVectorStore:
         chunk_texts: list[str],
         embedding_vectors: list[list[float]],
         content_hash: str,
+        chunk_metadatas: list[dict] | None = None,
     ) -> dict:
         doc = {
             "id": str(uuid.uuid4()),
@@ -80,6 +100,7 @@ class LocalVectorStore:
                     embeddings=embedding_vectors[i:end],
                     metadatas=[
                         {
+                            **_clean_metadata(chunk_metadatas[n] if chunk_metadatas else None),
                             "document_id": doc["id"],
                             "chunk_index": n,
                             "source": source_name,
@@ -115,22 +136,24 @@ class LocalVectorStore:
     def count_chunks(self) -> int:
         return self._collection.count()
 
-    def similarity_search(self, query_embedding: list[float], k: int = 5) -> list[dict]:
-        if self._collection.count() == 0:
+    def similarity_search(
+        self, query_embedding: list[float], k: int = 5, where: dict | None = None
+    ) -> list[dict]:
+        """Top-k chunks across all documents, best first. `where` is an
+        optional Chroma metadata filter, e.g. {"region": "South Asia"}."""
+        total = self._collection.count()
+        if total == 0:
             return []
         res = self._collection.query(
             query_embeddings=[query_embedding],
-            n_results=min(k, self._collection.count()),
+            n_results=min(k, total),
+            where=where or None,
         )
         return [
             {
                 "text": text,
                 "score": 1 - distance,  # cosine distance -> similarity
-                "metadata": {
-                    "source": meta["source"],
-                    "document_id": meta["document_id"],
-                    "chunk_index": meta["chunk_index"],
-                },
+                "metadata": dict(meta),
             }
             for text, meta, distance in zip(
                 res["documents"][0], res["metadatas"][0], res["distances"][0]

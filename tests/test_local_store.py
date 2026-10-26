@@ -84,3 +84,41 @@ def test_failed_insert_leaves_nothing_behind(tmp_path):
 
     assert store.count_chunks() == 0
     assert store.list_documents() == []
+
+
+def test_chunk_metadata_is_stored_returned_and_cleaned(tmp_path):
+    store = LocalVectorStore(tmp_path)
+    doc = store.add_document(
+        "report.pdf",
+        ["alpha", "beta"],
+        [A, B],
+        "h1",
+        chunk_metadatas=[
+            {"page": 3, "section": "Intro", "tags": ["x", "y"], "dropped": None, "source": "spoofed"},
+            {"page": 4, "kind": "table"},
+        ],
+    )
+
+    first = store.similarity_search(A, k=1)[0]["metadata"]
+
+    assert first["page"] == 3 and first["section"] == "Intro"
+    assert first["tags"] == "x, y"  # lists are flattened for Chroma
+    assert "dropped" not in first  # None is dropped
+    assert first["source"] == "report.pdf"  # reserved keys can't be overwritten
+    assert first["document_id"] == doc["id"] and first["chunk_index"] == 0
+
+
+def test_where_filter_restricts_the_search(tmp_path):
+    store = LocalVectorStore(tmp_path)
+    store.add_document(
+        "report.pdf",
+        ["alpha", "beta"],
+        [A, A],  # identical vectors: only the filter can tell them apart
+        "h1",
+        chunk_metadatas=[{"region": "South Asia"}, {"region": "Africa"}],
+    )
+
+    only_asia = store.similarity_search(A, k=5, where={"region": "South Asia"})
+
+    assert [r["text"] for r in only_asia] == ["alpha"]
+    assert store.similarity_search(A, k=5, where={"region": "Mars"}) == []

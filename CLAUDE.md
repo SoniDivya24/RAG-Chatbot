@@ -31,7 +31,8 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
   `~/Desktop/ProjectData/RAG-Projects/GPO Annual Report/drive-download-20261022T103331Z-1-001/`).
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
-  (local-only foundation) is Done; Phase 10 (pluggable pipeline + `mode` plumbing) is next.**
+  (local-only foundation) and Phase 10 (pluggable pipeline + `mode` plumbing) are Done; Phase 11 (the UI
+  mode switch) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -67,7 +68,13 @@ Quick summary (see `README.md` for full detail and rationale):
   embedding cache, all under the gitignored `data/` folder (`DATA_DIR` overrides it). No Supabase, no
   hosting. `GOOGLE_API_KEY` is the only credential. Tests use a throwaway data folder (`tests/conftest.py`).
 - Vanilla HTML/CSS/JS frontend served as static files by FastAPI
-- Next: a mode switch + three scenario pipelines (Phases 10-16, see `docs/phases.md` Part 2)
+- **Modes (Phase 10, done):** every API route takes `mode` (default `standard`). `app/profiles/` holds one
+  `Profile` per mode (how a file is read/chunked, relevance floor, context + source formatting);
+  `app/modes.py` gives each available mode its own library under `data/modes/<mode>/` and its own chat
+  session. Report / Long document / Visual document are registered but **unavailable** (HTTP 501) until
+  Phases 12-14 port them in. `GET /api/modes` lists them for the UI.
+- Next: the mode switch in the UI (Phase 11), then the three scenario profiles (12-14); see
+  `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)
 

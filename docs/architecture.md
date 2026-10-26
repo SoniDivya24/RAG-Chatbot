@@ -25,6 +25,8 @@ RAG-Chatbot/
 │   ├── main.py                 # FastAPI app: routes, static file mount, startup checks
 │   ├── config.py               # env var loading + validation
 │   ├── embeddings.py           # Gemini embeddings behind a SQLite cache (paced, retries, daily-quota aware)
+│   ├── profiles/               # one Profile per mode: base.py (Chunk, Profile, UnavailableProfile), standard.py
+│   ├── modes.py                # registry: profile + engine + chat session + store per mode (data/modes/<mode>/)
 │   ├── text_extract.py         # .txt/.md/.pdf -> plain text
 │   ├── vector_store.py         # local Chroma (cosine) + JSON document registry: CRUD + similarity search
 │   ├── rag_engine.py           # chunk -> embed -> store -> retrieve pipeline
@@ -33,7 +35,7 @@ RAG-Chatbot/
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
-├── data/                       # gitignored: index/ (Chroma), documents.json, embedding_cache.sqlite
+├── data/                       # gitignored: modes/<mode>/{index/ (Chroma), documents.json}, embedding_cache.sqlite
 └── samples/                    # gitignored: reference PDFs (Part 2)
 ```
 
@@ -62,7 +64,7 @@ don't need one for this scope.
 
 ---
 
-## Target architecture - local-only, multi-mode (Part 2, planned 2026-10-26)
+## Target architecture - local-only, multi-mode (Part 2; the plumbing - profiles, per-mode libraries, `mode` in the API - landed in Phase 10)
 
 ```
                          mode switch (UI)  ->  mode = standard | report | long | visual

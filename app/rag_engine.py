@@ -1,47 +1,37 @@
-import hashlib
-
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from typing import Any
 
 from app.embeddings import CachedEmbedder
+from app.profiles import Profile, StandardProfile
 from app.vector_store import LocalVectorStore
-
-CHUNK_SIZE = 800
-CHUNK_OVERLAP = 150
-RETRIEVAL_K = 5
-
-# Chunks scoring below this cosine similarity are treated as noise, not real
-# matches: a vector search always returns the top-k closest chunks even when none of
-# them are actually relevant (e.g. an off-topic question with documents
-# uploaded), and those shouldn't be sent to the LLM as context or shown to the
-# user as "sources" for an answer they didn't actually inform.
-MIN_RELEVANCE_SCORE = 0.62
 
 
 class RagEngine:
     """Owns the full "document -> chunks -> embeddings -> vector store ->
-    retrieval" pipeline. Every uploaded document is added to the same
-    persistent store, so retrieval always searches across the full library,
-    not just one document.
+    retrieval" pipeline for one mode. Every uploaded document is added to that
+    mode's persistent store, so retrieval always searches across the mode's
+    full library, not just one document.
+
+    The document-specific parts (how a file is read and chunked, the relevance
+    floor, how hits become context and sources) come from the `profile`; the
+    engine itself is generic.
     """
 
     def __init__(
         self,
+        profile: Profile | None = None,
         store: LocalVectorStore | None = None,
         embedder: CachedEmbedder | None = None,
     ) -> None:
-        self.splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP
-        )
+        self.profile = profile or StandardProfile()
         # Both are injectable so tests can use a throwaway data folder and a
         # fake embedder; the app uses the defaults (local `data/` + Gemini).
         self.store = store or LocalVectorStore()
         self.embedder = embedder or CachedEmbedder()
 
+    # -- helpers kept for callers that work with plain text -----------
+
     def chunk_text(self, text: str) -> list[str]:
-        chunks = self.splitter.split_text(text)
-        if not chunks:
-            raise ValueError("Document produced no usable text - is the file empty?")
-        return chunks
+        return [chunk.text for chunk in self.profile.chunk(text)]
 
     def embed_chunks(self, chunks: list[str]) -> list[list[float]]:
         vectors = self.embedder.embed_documents(chunks)
@@ -53,13 +43,25 @@ class RagEngine:
         self._assert_valid_embeddings([vector])
         return vector
 
+    # -- loading ------------------------------------------------------
+
+    def load_file(self, content: bytes, filename: str) -> dict:
+        """Read an uploaded file with this mode's profile, then index it."""
+        extracted = self.profile.extract(content, filename)
+        content_hash = self.profile.fingerprint(content, extracted)
+        return self._index(extracted, filename, content_hash)
+
     def load_document(self, text: str, source_name: str) -> dict:
+        """Index already-extracted text (the Standard pipeline's input)."""
+        content_hash = self.profile.fingerprint(text.encode("utf-8"), text)
+        return self._index(text, source_name, content_hash)
+
+    def _index(self, extracted: Any, source_name: str, content_hash: str) -> dict:
         """Chunk, embed, and persist a new document alongside any already
         stored - unless a document with identical content already exists, in
         which case skip re-indexing entirely (no wasted embedding calls or
         duplicate storage) and return the existing one instead.
         """
-        content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
         existing = self.store.find_by_content_hash(content_hash)
         if existing is not None:
             return {
@@ -69,9 +71,15 @@ class RagEngine:
                 "duplicate": True,
             }
 
-        chunks = self.chunk_text(text)
-        vectors = self.embed_chunks(chunks)
-        doc = self.store.add_document(source_name, chunks, vectors, content_hash)
+        chunks = self.profile.chunk(extracted)
+        vectors = self.embed_chunks([c.embed_text or c.text for c in chunks])
+        doc = self.store.add_document(
+            source_name,
+            [c.text for c in chunks],
+            vectors,
+            content_hash,
+            chunk_metadatas=[c.metadata for c in chunks],
+        )
         return {
             "id": doc["id"],
             "source_name": source_name,
@@ -79,12 +87,14 @@ class RagEngine:
             "duplicate": False,
         }
 
-    def retrieve(self, question: str, k: int = RETRIEVAL_K) -> list[dict]:
+    # -- retrieval ----------------------------------------------------
+
+    def retrieve(self, question: str, k: int | None = None, where: dict | None = None) -> list[dict]:
         """Embed the question and return the top-k most relevant chunks across
         all documents, filtered to ones actually relevant enough to matter."""
         query_vector = self.embed_query(question)
-        results = self.store.similarity_search(query_vector, k)
-        return [r for r in results if r["score"] >= MIN_RELEVANCE_SCORE]
+        results = self.store.similarity_search(query_vector, k or self.profile.retrieval_k, where)
+        return [r for r in results if r["score"] >= self.profile.min_score]
 
     def has_documents(self) -> bool:
         return self.count_chunks() > 0

@@ -3,6 +3,7 @@ load -> dedup -> retrieve -> delete cycle without any API call."""
 
 import pytest
 
+from app.profiles import StandardProfile
 from app.rag_engine import RagEngine
 from app.vector_store import LocalVectorStore
 
@@ -17,12 +18,13 @@ LUNCH_MENU = (
 
 
 @pytest.fixture
-def engine(tmp_path, fake_embedder, monkeypatch):
-    # The app's relevance floor (0.62) is tuned for real Gemini embeddings; the
-    # fake bag-of-words vectors score lower, so use a floor that separates this
-    # test data's on-topic (0.36-0.76) from off-topic (0.00-0.19) queries.
-    monkeypatch.setattr("app.rag_engine.MIN_RELEVANCE_SCORE", 0.25)
-    return RagEngine(store=LocalVectorStore(tmp_path / "data"), embedder=fake_embedder)
+def engine(tmp_path, fake_embedder):
+    # The Standard profile's relevance floor (0.62) is tuned for real Gemini
+    # embeddings; the fake bag-of-words vectors score lower, so use a floor that
+    # separates this test data's on-topic (0.36-0.76) from off-topic (0.00-0.19).
+    profile = StandardProfile()
+    profile.min_score = 0.25
+    return RagEngine(profile, LocalVectorStore(tmp_path / "data"), fake_embedder)
 
 
 def test_load_retrieve_and_delete(engine):

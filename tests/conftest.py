@@ -5,11 +5,20 @@ the real library under `data/`.
 
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
 _TEST_DATA_DIR = tempfile.mkdtemp(prefix="rag-chatbot-tests-")
 os.environ["DATA_DIR"] = _TEST_DATA_DIR
+
+# app.main requires GOOGLE_API_KEY at import. Load .env.local first so a real
+# key (needed by the live smoke tests) wins; only if there is none, use a dummy
+# so the offline tests can still import the app. Offline tests never call Gemini.
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+os.environ.setdefault("GOOGLE_API_KEY", "offline-test-key")
 
 from tests.fakes import fake_vector  # noqa: E402  (after DATA_DIR is set)
 

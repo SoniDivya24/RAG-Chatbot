@@ -22,7 +22,7 @@ GOOGLE_API_KEY=
 CHAT_MODEL=gemini-3.1-flash-lite
 EMBEDDING_MODEL=models/gemini-embedding-001
 PORT=8000
-DATA_DIR=            # defaults to ./data (vector index, documents.json, embedding_cache.sqlite)
+DATA_DIR=            # defaults to ./data (modes/<mode>/ stores + embedding_cache.sqlite)
 ```
 
 ## Part 2 changes (local-only, 2026-10-26 - Phase 9)
