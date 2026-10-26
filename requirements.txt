@@ -8,6 +8,7 @@ langchain-google-genai
 langchain-text-splitters
 chromadb
 pypdf
+pymupdf
 slowapi
 pytest
 httpx

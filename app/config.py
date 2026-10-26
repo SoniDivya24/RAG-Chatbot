@@ -11,6 +11,11 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "gemini-3.1-flash-lite")
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "models/gemini-embedding-001")
 PORT = int(os.environ.get("PORT", "8000"))
+# Seconds before a model call is abandoned: a stalled network request must fail, not freeze a
+# chat reply (or an upload) forever. Vision calls read a whole page image, so they get longer.
+LLM_TIMEOUT = float(os.environ.get("LLM_TIMEOUT", "90"))
+VISION_TIMEOUT = float(os.environ.get("VISION_TIMEOUT", "150"))
+EMBEDDING_TIMEOUT = float(os.environ.get("EMBEDDING_TIMEOUT", "60"))
 
 # Everything the app persists (vector index, document registry, embedding
 # cache) lives under one local, gitignored folder - there is no database or

@@ -115,3 +115,53 @@ def test_empty_vectors_are_not_cached(tmp_path):
 
     assert embedder.embed_documents(["alpha"]) == [[]]
     assert embedder.cache_size() == 0
+
+
+# ---- a stalled embedding call must fail, not hang forever ------------------------------------
+
+
+def test_a_stalled_call_times_out_instead_of_hanging(tmp_path, monkeypatch):
+    import threading
+    import time
+
+    from app.embeddings import EmbeddingTimeout
+
+    monkeypatch.setattr("app.embeddings.config.EMBEDDING_TIMEOUT", 0.2)
+    release = threading.Event()
+    calls = []
+
+    def stalls(texts):
+        calls.append(1)
+        release.wait(5)  # never answers within the limit
+        return [fake_vector(t) for t in texts]
+
+    embedder = CachedEmbedder(tmp_path / "c.sqlite", embed_documents_fn=stalls, sleep=lambda _s: None)
+    started = time.time()
+
+    with pytest.raises(EmbeddingTimeout, match="didn't answer within 0.2 seconds"):
+        embedder.embed_documents(["alpha"])
+
+    release.set()
+    assert time.time() - started < 2  # bounded: ~2 attempts x 0.2s, not 5s+
+    assert len(calls) == 2  # one retry for a transient stall, then a clear failure
+    assert embedder.cache_size() == 0
+
+
+def test_a_single_stall_is_retried_and_succeeds(tmp_path, monkeypatch):
+    import threading
+
+    monkeypatch.setattr("app.embeddings.config.EMBEDDING_TIMEOUT", 0.2)
+    release = threading.Event()
+    attempts = {"n": 0}
+
+    def stalls_once(texts):
+        attempts["n"] += 1
+        if attempts["n"] == 1:
+            release.wait(5)
+        return [fake_vector(t) for t in texts]
+
+    embedder = CachedEmbedder(tmp_path / "c.sqlite", embed_documents_fn=stalls_once, sleep=lambda _s: None)
+
+    assert embedder.embed_documents(["alpha"])[0] == pytest.approx(fake_vector("alpha"), abs=1e-6)
+    release.set()
+    assert attempts["n"] == 2

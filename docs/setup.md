@@ -22,7 +22,10 @@ GOOGLE_API_KEY=
 CHAT_MODEL=gemini-3.1-flash-lite
 EMBEDDING_MODEL=models/gemini-embedding-001
 PORT=8000
-DATA_DIR=            # defaults to ./data (modes/<mode>/ stores + embedding_cache.sqlite)
+DATA_DIR=            # defaults to ./data (modes/<mode>/ stores + embedding_cache.sqlite + vision_cache/)
+LLM_TIMEOUT=90        # seconds before a chat call is abandoned
+VISION_TIMEOUT=150    # chart-description (image) calls
+EMBEDDING_TIMEOUT=60  # embedding calls (enforced by the app; the library's own option is a no-op)
 ```
 
 ## Part 2 changes (local-only, 2026-10-26 - Phase 9)

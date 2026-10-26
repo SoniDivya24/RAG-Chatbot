@@ -38,7 +38,9 @@ class ChatSession:
         if self._llm is None:
             config.require("GOOGLE_API_KEY")
             self._llm = ChatGoogleGenerativeAI(
-                model=config.CHAT_MODEL, temperature=self.rag_engine.profile.temperature
+                model=config.CHAT_MODEL,
+                temperature=self.rag_engine.profile.temperature,
+                timeout=config.LLM_TIMEOUT,
             )
         return self._llm
 

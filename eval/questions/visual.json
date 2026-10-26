@@ -1,0 +1,23 @@
+[
+  {"id": "Q1", "core": true, "type": "prose", "question": "How much less energy does iMac use compared to the ENERGY STAR requirement?", "gold_pages": [7], "gold_elements": ["prose", "footnoted claim"], "must": [["58%"]], "must_not": []},
+  {"id": "Q2", "core": true, "type": "table", "question": "What is the total carbon footprint of the iMac, and how much of that comes from product use versus manufacturing?", "gold_pages": [10], "gold_elements": ["table"], "must": [["346"], ["45%"], ["50%"]], "must_not": []},
+  {"id": "Q3", "core": true, "type": "call-out", "question": "What material is the iMac stand made from, and what percentage of it is recycled?", "gold_pages": [1, 4], "gold_elements": ["call-out"], "must": [["aluminum"], ["100%"]], "must_not": []},
+  {"id": "C1", "type": "chart", "question": "What was the baseline emissions figure, and how many kilograms did the reductions remove?", "gold_pages": [2], "gold_elements": ["chart"], "must": [["445"], ["99"]], "must_not": []},
+  {"id": "C2", "type": "chart", "question": "Which categories of reductions are shown between baseline and final emissions?", "gold_pages": [2], "gold_elements": ["chart"], "must": [["recycled"], ["low-carbon electricity"], ["non-air shipping"]], "must_not": []},
+  {"id": "T1", "type": "table", "question": "What is the power consumption in sleep mode at 115V?", "gold_pages": [12], "gold_elements": ["table"], "must": [["0.57"]], "must_not": []},
+  {"id": "T2", "type": "table", "question": "What is the idle (display on) power consumption at 230V?", "gold_pages": [12], "gold_elements": ["table"], "must": [["20.9"]], "must_not": []},
+  {"id": "T3", "type": "table", "question": "What is the power adapter efficiency at 100V?", "gold_pages": [12], "gold_elements": ["table"], "must": [["91.1"]], "must_not": []},
+  {"id": "T4", "type": "table", "question": "What is the carbon footprint of the four-port 512GB iMac?", "gold_pages": [10], "gold_elements": ["table"], "must": [["391"]], "must_not": []},
+  {"id": "F1", "type": "footnote", "question": "Is iMac free of PVC and phthalates, and are there exceptions?", "gold_pages": [4, 11], "gold_elements": ["footnoted claim", "endnote"], "must": [["india"], ["thailand"], ["south korea"]], "must_not": [], "caveat": true},
+  {"id": "F2", "type": "footnote", "question": "Does the 100% recycled copper claim apply to every iMac?", "gold_pages": [4, 11], "gold_elements": ["call-out", "endnote"], "must": [["four ports", "four-port"]], "must_not": [], "caveat": true},
+  {"id": "F3", "type": "footnote", "question": "What counts as recycled content in the more-than-15-percent claim?", "gold_pages": [11], "gold_elements": ["endnote", "footnoted claim"], "must": [["mass"], ["packaging"]], "must_not": []},
+  {"id": "F4", "type": "footnote", "question": "How is Zero Waste to Landfill verified for iMac?", "gold_pages": [5, 11], "gold_elements": ["call-out", "endnote"], "must": [["ul"], ["90%"]], "must_not": [], "caveat": true},
+  {"id": "K1", "type": "call-out", "question": "What percent of the packaging is fiber-based, and how much recycled content does the fiber packaging have?", "gold_pages": [6], "gold_elements": ["call-out"], "must": [["100%"], ["76%"]], "must_not": []},
+  {"id": "K2", "type": "call-out", "question": "How much recycled plastic does iMac use, and in how many components?", "gold_pages": [4], "gold_elements": ["call-out"], "must": [["50%"], ["13"]], "must_not": []},
+  {"id": "K3", "type": "call-out", "question": "What share of total rare earth elements is covered by the recycled rare earths in magnets?", "gold_pages": [4], "gold_elements": ["call-out"], "must": [["99%"]], "must_not": []},
+  {"id": "P1", "type": "prose", "question": "How long is the assumed use period for macOS devices?", "gold_pages": [9], "gold_elements": ["prose"], "must": [["four", "4"]], "must_not": []},
+  {"id": "N1", "type": "refusal", "question": "What is the iMac's battery capacity?", "gold_pages": [], "gold_elements": [], "must": [], "must_not": [], "expect_refusal": true},
+  {"id": "N2", "type": "refusal", "question": "How much does the iMac weigh?", "gold_pages": [], "gold_elements": [], "must": [], "must_not": [], "expect_refusal": true},
+  {"id": "N3", "type": "refusal", "question": "What is the carbon footprint of the 24-inch M5 iMac?", "gold_pages": [], "gold_elements": [], "must": [], "must_not": ["m5 imac is", "m5 is"], "expect_refusal": true, "refusal_or": ["two ports", "four ports"]},
+  {"id": "N4", "type": "refusal", "question": "Who is the CEO of Apple?", "gold_pages": [], "gold_elements": [], "must": [], "must_not": ["tim cook"], "expect_refusal": true}
+]

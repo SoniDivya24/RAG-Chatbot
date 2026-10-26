@@ -8,7 +8,7 @@
   {"id": "E4", "question": "How many copies of how many titles were distributed to depository libraries?", "must_contain": [["802,834"], ["4,211"]], "gold_pages": [5, 15, 19]},
   {"id": "E5", "question": "How many titles did GPO catalog in FY 2018?", "must_contain": [["34,367"]], "gold_pages": [5, 15, 19]},
   {"id": "E6", "question": "How many titles does govinfo make available online?", "must_contain": [["2.5 million"]], "gold_pages": [4, 22]},
-  {"id": "E7", "question": "How many FDLP Academy webinars were held and how many participants attended?", "must_contain": [["85"], ["10,"]], "gold_pages": [5, 20]},
+  {"id": "E7", "question": "How many FDLP Academy webinars were held and how many participants attended?", "must_contain": [["85"], ["10,214", "10,000"]], "gold_pages": [5, 20]},
   {"id": "E8", "question": "What was GPO's net income in FY 2018?", "must_contain": [["52,624", "52.6 million"]], "gold_pages": [26, 44, 59, 60]},
   {"id": "N1", "refusal": true, "question": "What were GPO's revenues in FY 2020?"},
   {"id": "N2", "refusal": true, "question": "Who is the current Public Printer of the United States?"},

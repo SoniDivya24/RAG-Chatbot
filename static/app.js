@@ -245,6 +245,14 @@ function appendPendingNote() {
   return note;
 }
 
+// The app's own notes ("Added: some_file_name.pdf") and what the user types are
+// literal text: running them through the Markdown renderer turned the underscores
+// in file names into italics. Only the model's answers are Markdown.
+function renderPlain(text) {
+  const paragraphs = text.split("\n").filter((line) => line.trim() !== "");
+  return paragraphs.map((line) => `<p>${escapeHtml(line)}</p>`).join("") || "<p></p>";
+}
+
 function appendNote(role, text, sources, tagLabel) {
   const note = document.createElement("div");
   note.className = `note note--${role}`;
@@ -260,7 +268,7 @@ function appendNote(role, text, sources, tagLabel) {
 
   const content = document.createElement("div");
   content.className = "note__content";
-  content.innerHTML = renderMarkdownLite(text);
+  content.innerHTML = role === "assistant" ? renderMarkdownLite(text) : renderPlain(text);
   note.appendChild(content);
 
   if (sources && sources.length > 0) {

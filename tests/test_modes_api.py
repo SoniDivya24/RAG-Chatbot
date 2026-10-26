@@ -76,6 +76,7 @@ def test_modes_endpoint_lists_all_four_with_availability(api):
     assert list(by_id) == ["standard", "report", "long", "visual", "paged"]
     assert by_id["standard"]["available"] is True and by_id["standard"]["documentCount"] == 0
     assert by_id["report"]["available"] is True and by_id["report"]["extensions"] == [".pdf"]
+    assert by_id["visual"]["available"] is True and by_id["visual"]["extensions"] == [".pdf"]
     assert by_id["long"]["available"] is False and "documentCount" not in by_id["long"]
     assert by_id["standard"]["extensions"] == [".txt", ".md", ".pdf"]
 
@@ -101,7 +102,7 @@ def test_unavailable_mode_is_a_501_and_never_calls_the_model(api):
     assert res.status_code == 501
     assert res.json() == {"error": "The Long document mode isn't available yet."}
     assert api.llm.messages == []
-    assert upload(api.client, "a.txt", b"hello", "visual").status_code == 501
+    assert upload(api.client, "a.txt", b"hello", "long").status_code == 501
     assert api.client.get("/api/status?mode=long").status_code == 501
 
 

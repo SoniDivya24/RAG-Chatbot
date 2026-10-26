@@ -16,8 +16,8 @@ def test_registry_lists_the_four_modes_in_order():
         "Long document",
         "Visual document",
     ]
-    assert profiles["standard"].available is True and profiles["report"].available is True
-    assert all(not profiles[m].available for m in ("long", "visual"))
+    assert all(profiles[m].available for m in ("standard", "report", "visual"))
+    assert profiles["long"].available is False
 
 
 def test_unavailable_profiles_fail_clearly_instead_of_falling_back():

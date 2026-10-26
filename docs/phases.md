@@ -148,6 +148,14 @@ PDFs are **built-in samples, gitignored** (`samples/`), loadable with one click 
 - **Build:** PyMuPDF geometry for tables (rebuilt under header bars), footnote markers linked to
   endnotes, call-out grouping, chart description via Gemini vision (cached), element-typed chunks.
   Eval: the 21-question set, reported per content type.
+- **As built:** the prototype's constants (24pt titles, 11pt headings, a 735pt footer, endnotes on pp11-12,
+  "the chart is on p2") are derived per document instead (`layout.py`), as ratios of the body text size, so
+  uploads of other PDFs scale rather than lose text; charts are found by their coloured stacked bars (table
+  stripes are grey), so the prototype's page-2 special case is gone. On the iMac report the derived layout equals
+  the old constants and the chunks equal the prototype's. The chart prompt is generic (the prototype's was
+  specific to its waterfall chart) and still scores 2/2 on the chart questions. `eval/run_eval.py` gained a
+  per-content-type table and `--label`, so one document can be run through two modes
+  (`docs/results/standard-on-imac.md` vs `visual.md`).
 
 ### Phase 14 - Long document mode (port of the World Bank prototype)
 - **Build:** font-based structure -> section hierarchy, parent/child chunks, region/chapter filters

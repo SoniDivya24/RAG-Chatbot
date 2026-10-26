@@ -238,3 +238,19 @@ def test_gpo_annual_report_is_cleaned_and_chunked_as_validated():
     assert "govinfo" in by_page[22]
     assert not any("ANNUAL REPORT | U.S. GOVERNMENT" in t.upper() for t in by_page.values())
     assert len(profile.chunk(pages)) == 263  # the count the prototype's evaluation was run on
+
+
+def test_the_chat_model_gets_a_request_timeout(monkeypatch, report_chat):
+    chat, _ = report_chat
+    seen = {}
+
+    class FakeChat:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+    monkeypatch.setattr("app.chat_session.ChatGoogleGenerativeAI", FakeChat)
+    monkeypatch.setitem(__import__("app.config", fromlist=["_ENV_VALUES"])._ENV_VALUES, "GOOGLE_API_KEY", "x")
+
+    chat.llm
+
+    assert seen["timeout"] == __import__("app.config", fromlist=["LLM_TIMEOUT"]).LLM_TIMEOUT > 0

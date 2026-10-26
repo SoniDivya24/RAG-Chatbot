@@ -6,7 +6,7 @@
 > embedding cache is added**. Gemini stays for chat, embeddings and chart vision. Groq was offered as an
 > extra provider and is *not* needed now (see backlog). Rows below are updated as each phase lands.
 
-**Landed so far:** local Chroma + SQLite embedding cache (Phase 9); per-mode profiles (10); the mode switch (11); **Report mode (12)** - `pypdf` page extraction with generic running-head/foot detection, 800/150 page-tagged chunks that never span pages, relevance floor 0.68, temperature 0, page-labelled context and `(p. N)` citations, exact refusal with sources dropped; uploads up to 25 MB.
+**Landed so far:** local Chroma + SQLite embedding cache (Phase 9); per-mode profiles (10); the mode switch (11); **Report mode (12)** - `pypdf` page extraction with generic running-head/foot detection, 800/150 page-tagged chunks that never span pages, relevance floor 0.68, temperature 0, page-labelled context and `(p. N)` citations, exact refusal with sources dropped; uploads up to 25 MB; **Visual document mode (13)** - `pymupdf` geometry (tables from dark header bars, footnote markers by size/adjacency, call-outs by type scale, charts by coloured stacked bars), layout derived per document, chart pages described by `CHAT_MODEL` vision with an on-disk cache, element-typed chunks. Install note: `pip install --only-binary=:all: pymupdf` if pip tries a source build; import it as `pymupdf`.
 
 ## References
 

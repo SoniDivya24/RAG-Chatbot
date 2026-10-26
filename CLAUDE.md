@@ -32,7 +32,7 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
   (local-only foundation) Phase 10 (pluggable pipeline + `mode` plumbing) and Phase 11 (the UI
-  mode switch) and Phase 12 (Report mode) are Done; Phase 13 (Visual document mode, from the iMac prototype) is next.**
+  mode switch), Phase 12 (Report mode) and Phase 13 (Visual document mode) are Done; Phase 14 (Long document mode, from the World Bank prototype) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -85,7 +85,16 @@ Quick summary (see `README.md` for full detail and rationale):
   `{key: vector}` JSON) so indexing a reference document costs no embeddings - run it before indexing a sample.
   `eval/run_eval.py --mode <mode>` indexes the sample into a throwaway library and writes `docs/results/<mode>.md`
   (Report: core 3/3, extended 8/8, refusals 4/4, MRR 0.84). The reference PDFs live in the gitignored `samples/`.
-- Next: Visual document (13) then Long document (14), ported from their prototypes; see `docs/phases.md` Part 2
+- **Visual document mode (Phase 13, done):** `app/profiles/visual/` - ported from the iMac prototype with every
+  layout constant derived from the document (`layout.py`; pinned to the prototype's values on the iMac report by a
+  test, and the chunks equal the prototype's). Needs `pymupdf` (install `--only-binary=:all:`). Chunks carry
+  `page` + `kind` (prose / table / call-out / endnote / footnoted claim / chart); the chart page costs one cached
+  vision call (`data/vision_cache/`). Tests build synthetic PDFs with PyMuPDF for the generic behaviour and check the
+  real report against a hash snapshot (`tests/golden/`). Eval: 21/21 (`docs/results/visual.md`). Chat notes written
+  by the app or typed by the user are plain text now (underscores in file names were being italicised).
+- **Timeouts (Phase 13):** model calls are bounded - `LLM_TIMEOUT`/`VISION_TIMEOUT` via the chat model's own `timeout`, `EMBEDDING_TIMEOUT` enforced in `app/embeddings.py` (langchain-google-genai 4.4.2 ignores `request_options` and the SDK overrides the HTTP-client timeout per request, so don't "fix" this by passing `request_options`/`client_args`).
+- Next: Long document (14), ported from the World Bank prototype; then samples & evaluation (15) and the docs/video (16);
+  see `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)
 

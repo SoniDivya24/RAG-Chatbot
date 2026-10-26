@@ -18,12 +18,42 @@ BATCH_SIZE = 40
 PACE_SECONDS = 60 * BATCH_SIZE / 90
 RETRY_WAIT_SECONDS = 30
 MAX_TRIES = 6
+MAX_TIMEOUTS = 2
 
 QUERY_PREFIX = "query:"
 
 
 class EmbeddingQuotaExhausted(RuntimeError):
     """The daily embedding quota is used up; retrying today can't help."""
+
+
+class EmbeddingTimeout(RuntimeError):
+    """The embedding service didn't answer in time."""
+
+
+def _call_with_timeout(fn, seconds: float, *args):
+    """Run fn(*args), but stop waiting after `seconds`.
+
+    langchain-google-genai's own timeout options for embeddings are not honoured (checked: a 1 ms
+    limit still succeeds), so a stalled request would hang forever. The call runs on a daemon
+    thread - it may finish in the background, but the caller gets a clear error instead of a freeze.
+    """
+    outcome: dict = {}
+
+    def target() -> None:
+        try:
+            outcome["value"] = fn(*args)
+        except BaseException as exc:  # handed back to the caller below
+            outcome["error"] = exc
+
+    worker = threading.Thread(target=target, daemon=True)
+    worker.start()
+    worker.join(seconds)
+    if worker.is_alive():
+        raise EmbeddingTimeout(f"The embedding service didn't answer within {seconds:g} seconds.")
+    if "error" in outcome:
+        raise outcome["error"]
+    return outcome["value"]
 
 
 class CachedEmbedder:
@@ -128,9 +158,14 @@ class CachedEmbedder:
         return self.client.embed_query(text)
 
     def _with_retry(self, fn, *args):
+        timeouts = 0
         for attempt in range(MAX_TRIES):
             try:
-                return fn(*args)
+                return _call_with_timeout(fn, config.EMBEDDING_TIMEOUT, *args)
+            except EmbeddingTimeout:
+                timeouts += 1  # a stall is usually transient: one more try, then give up clearly
+                if timeouts >= MAX_TIMEOUTS:
+                    raise
             except Exception as exc:
                 msg = str(exc)
                 if "PerDay" in msg:
