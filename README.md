@@ -45,10 +45,13 @@ document registry and a SQLite embedding cache, all under `data/`), and a
 **vanilla HTML/CSS/JS** frontend - no frontend framework, no build step.
 Gemini is the only external service; nothing is deployed.
 
-> **Roadmap:** the app is gaining a **mode switch** between this standard RAG
-> and three document-specific RAGs (plain-text reports, long structured
-> reports, and tables/charts/footnotes) - see Part 2 of
-> [docs/phases.md](docs/phases.md).
+A **mode switch** under the title flips the app between this **Standard** RAG
+and three document-specific RAGs (**Report**, **Long document**, **Visual
+document**). Each mode has its own documents and its own conversation; modes
+that aren't built yet are marked "soon". Answers are tagged with the mode that
+produced them, and the Sources panel shows page / section / element type where
+a mode provides them. See Part 2 of [docs/phases.md](docs/phases.md) for the
+roadmap.
 
 For the full technical write-up (architecture, schema, API contract, and
 how each part was built and verified), see [docs/](docs/) - start with

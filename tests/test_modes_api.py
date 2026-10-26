@@ -172,3 +172,14 @@ def test_status_counts_are_per_mode(api):
 
     assert api.client.get("/api/status?mode=standard").json()["documentCount"] == 1
     assert api.client.get("/api/status?mode=paged").json()["documentCount"] == 0
+
+
+def test_modes_endpoint_carries_ui_presentation_data(api):
+    by_id = {m["id"]: m for m in api.client.get("/api/modes").json()["modes"]}
+
+    assert by_id["standard"]["uploadHint"] and len(by_id["standard"]["exampleQuestions"]) == 3
+    # The scenario modes ship the reference documents' sample questions.
+    assert "South Asia" in by_id["long"]["exampleQuestions"][0]
+    assert "ENERGY STAR" in by_id["visual"]["exampleQuestions"][0]
+    assert "depository libraries" in by_id["report"]["exampleQuestions"][0]
+    assert all(m["uploadHint"] for m in by_id.values() if m["id"] != "paged")

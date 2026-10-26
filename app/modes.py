@@ -73,6 +73,8 @@ class Modes:
                 "description": profile.description,
                 "available": profile.available,
                 "extensions": list(profile.extensions),
+                "uploadHint": profile.upload_hint,
+                "exampleQuestions": list(profile.example_questions),
             }
             if profile.available:
                 info["documentCount"] = len(self.engine(profile.id).list_documents())

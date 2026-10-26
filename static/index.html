@@ -95,17 +95,29 @@
       </div>
     </header>
 
+    <!-- Mode switch: one control flips the whole app between the standard RAG
+         and the three document-specific RAGs. Buttons are filled in by app.js
+         from GET /api/modes. -->
+    <nav class="modebar" aria-label="RAG mode">
+      <div id="mode-switch" class="modeswitch" role="radiogroup" aria-label="RAG mode"></div>
+      <p id="mode-description" class="modebar__description"></p>
+    </nav>
+
     <div id="dropzone-overlay" class="dropzone-overlay" hidden>
       <div class="dropzone-overlay__card">
         <span class="dropzone-overlay__icon" aria-hidden="true">⬆</span>
         <p class="dropzone-overlay__title">Drop to add</p>
-        <p class="dropzone-overlay__subtitle">.txt, .md, or .pdf - up to 5 files at a time</p>
+        <p id="dropzone-subtitle" class="dropzone-overlay__subtitle">.txt, .md, or .pdf - up to 5 files at a time</p>
       </div>
     </div>
 
     <dialog id="help-dialog" class="help-dialog">
       <h2>What you can do here</h2>
+      <p id="help-mode" class="help-dialog__mode"></p>
       <ul>
+        <li>Pick a <strong>mode</strong> with the switch under the title. Each mode is its own
+          RAG with its own documents and its own conversation - Standard for any file, the
+          others tuned for specific kinds of document.</li>
         <li>Add <strong>.txt, .md, or .pdf</strong> documents using the strip above the message box.</li>
         <li>Ask questions - answers are grounded in whatever documents you've added.</li>
         <li>Each answer that used a document shows a <strong>Sources</strong> toggle - expand
@@ -113,7 +125,7 @@
         <li>No documents added yet? You can still chat generally.</li>
         <li>Remove a document any time with the × on its chip.</li>
         <li>"New conversation" clears the chat <strong>and</strong> removes every
-          uploaded document, for a genuinely clean slate.</li>
+          document uploaded in the <strong>current mode</strong>, for a genuinely clean slate.</li>
       </ul>
       <button id="help-close" type="button" class="ghost-btn">Got it</button>
     </dialog>

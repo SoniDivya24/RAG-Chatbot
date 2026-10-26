@@ -36,6 +36,10 @@ class Profile(ABC):
     extensions: tuple[str, ...] = (".txt", ".md", ".pdf")
     available: bool = True
 
+    # Shown by the UI for this mode: what to upload, and questions worth trying.
+    upload_hint: str = ""
+    example_questions: tuple[str, ...] = ()
+
     retrieval_k: int = 5
     # Chunks scoring below this cosine similarity are noise, not real matches.
     min_score: float = 0.62
@@ -78,10 +82,19 @@ class UnavailableProfile(Profile):
 
     available = False
 
-    def __init__(self, id: str, label: str, description: str) -> None:
+    def __init__(
+        self,
+        id: str,
+        label: str,
+        description: str,
+        upload_hint: str = "",
+        example_questions: tuple[str, ...] = (),
+    ) -> None:
         self.id = id
         self.label = label
         self.description = description
+        self.upload_hint = upload_hint
+        self.example_questions = example_questions
 
     def _unavailable(self) -> ValueError:
         return ValueError(f"The {self.label} mode isn't available yet.")

@@ -22,6 +22,12 @@ class StandardProfile(Profile):
     id = "standard"
     label = "Standard"
     description = "General-purpose RAG over .txt, .md and .pdf files."
+    upload_hint = "Any .txt, .md or .pdf documents."
+    example_questions = (
+        "What is this document about?",
+        "Summarize the key points.",
+        "What are the main topics covered?",
+    )
 
     retrieval_k = RETRIEVAL_K
     min_score = MIN_RELEVANCE_SCORE

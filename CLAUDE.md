@@ -31,8 +31,8 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
   `~/Desktop/ProjectData/RAG-Projects/GPO Annual Report/drive-download-20261022T103331Z-1-001/`).
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
-  (local-only foundation) and Phase 10 (pluggable pipeline + `mode` plumbing) are Done; Phase 11 (the UI
-  mode switch) is next.**
+  (local-only foundation) Phase 10 (pluggable pipeline + `mode` plumbing) and Phase 11 (the UI
+  mode switch) are Done; Phase 12 (Report mode, ported from the GPO prototype) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -73,7 +73,13 @@ Quick summary (see `README.md` for full detail and rationale):
   `app/modes.py` gives each available mode its own library under `data/modes/<mode>/` and its own chat
   session. Report / Long document / Visual document are registered but **unavailable** (HTTP 501) until
   Phases 12-14 port them in. `GET /api/modes` lists them for the UI.
-- Next: the mode switch in the UI (Phase 11), then the three scenario profiles (12-14); see
+- **Mode switch (Phase 11, done):** a segmented control in a mode bar under the masthead, built from
+  `GET /api/modes`; unavailable modes are disabled with a "soon" tag. The mode scopes the document rail,
+  upload target/accepted types, chat history (`rag-chatbot:thread:<mode>` in localStorage), empty state with
+  example-question chips, composer placeholder and help text; it lives in the URL hash. Answers carry a mode
+  tag and Sources show page / section / kind tags. Details in `docs/frontend.md`. The UI was verified with a
+  scratch Playwright script (outside the repo) driving the cached headless Chromium.
+- Next: the three scenario profiles - Report (12), Visual document (13), Long document (14); see
   `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)

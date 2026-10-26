@@ -792,3 +792,186 @@ button:disabled {
     padding-right: 16px;
   }
 }
+
+/* ---- Mode switch: a segmented control under the masthead. One component
+   flips the whole app between the standard RAG and the document-specific
+   RAGs; colors come from the theme variables so it follows the theme picker. ---- */
+
+.modebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 32px;
+  background: var(--card);
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.modeswitch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--paper));
+  flex-shrink: 0;
+}
+
+.modeswitch__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.modeswitch__btn:hover:not([aria-disabled="true"]):not([aria-checked="true"]) {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.modeswitch__btn[aria-checked="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 1px 3px rgba(43, 37, 33, 0.18);
+}
+
+.modeswitch__btn[aria-disabled="true"] {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.modeswitch__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.modeswitch__soon {
+  padding: 1px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.modebar__description {
+  margin: 0;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Which mode produced an answer, and where in the document a source came from. */
+
+.note__tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.citation__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: -2px 0 6px;
+}
+
+.citation__tag {
+  padding: 1px 7px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.citation__tag--kind {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+/* Example questions in a mode's empty state. */
+
+.note__chips-label {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.note__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chip-btn {
+  padding: 7px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.chip-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.help-dialog__mode {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .modebar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+
+  /* Four segments don't fit in one row on a phone, and a sideways-scrolling
+     row hides the last mode with no hint it exists: lay them out 2 x 2 so
+     every mode is always visible. */
+  .modeswitch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .modeswitch__btn {
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 9px 4px;
+    font-size: 0.78rem;
+  }
+
+  .modeswitch__soon {
+    padding: 1px 5px;
+    font-size: 0.56rem;
+  }
+}
