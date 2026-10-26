@@ -47,8 +47,11 @@ Gemini is the only external service; nothing is deployed.
 
 A **mode switch** under the title flips the app between this **Standard** RAG
 and three document-specific RAGs (**Report**, **Long document**, **Visual
-document**). Each mode has its own documents and its own conversation; modes
-that aren't built yet are marked "soon". Answers are tagged with the mode that
+document**). Each mode has its own documents and its own conversation.
+**Standard** and **Report** are built; the other two are marked "soon". Report
+mode is for plain-text PDF reports: it keeps every passage's page, cites pages
+in its answers, and answers "I could not find this in the document." (with no
+sources) when the report doesn't cover the question. Answers are tagged with the mode that
 produced them, and the Sources panel shows page / section / element type where
 a mode provides them. See Part 2 of [docs/phases.md](docs/phases.md) for the
 roadmap.

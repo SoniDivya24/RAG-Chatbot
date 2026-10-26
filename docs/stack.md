@@ -6,6 +6,8 @@
 > embedding cache is added**. Gemini stays for chat, embeddings and chart vision. Groq was offered as an
 > extra provider and is *not* needed now (see backlog). Rows below are updated as each phase lands.
 
+**Landed so far:** local Chroma + SQLite embedding cache (Phase 9); per-mode profiles (10); the mode switch (11); **Report mode (12)** - `pypdf` page extraction with generic running-head/foot detection, 800/150 page-tagged chunks that never span pages, relevance floor 0.68, temperature 0, page-labelled context and `(p. N)` citations, exact refusal with sources dropped; uploads up to 25 MB.
+
 ## References
 
 - **Concept reference (the actual spec we're extending):**

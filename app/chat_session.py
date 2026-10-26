@@ -37,7 +37,9 @@ class ChatSession:
     def llm(self) -> ChatGoogleGenerativeAI:
         if self._llm is None:
             config.require("GOOGLE_API_KEY")
-            self._llm = ChatGoogleGenerativeAI(model=config.CHAT_MODEL, temperature=0.7)
+            self._llm = ChatGoogleGenerativeAI(
+                model=config.CHAT_MODEL, temperature=self.rag_engine.profile.temperature
+            )
         return self._llm
 
     def ask(self, user_message: str, history: list[dict] | None = None) -> dict:
@@ -76,7 +78,7 @@ class ChatSession:
                 "simple, common, or well-known the answer might seem (this applies "
                 "even to basic facts like geography or dates). Reply with only this "
                 "sentence, with no additions: "
-                "\"I don't have that information in the documents.\""
+                f"\"{profile.refusal}\""
             )
         else:
             # Deliberately no instruction to mention the lack of documents:
@@ -104,7 +106,8 @@ class ChatSession:
         response = self.llm.invoke(messages)
         reply = get_text(response)
 
-        return {
-            "reply": reply,
-            "sources": [profile.source_payload(chunk) for chunk in relevant_chunks],
-        }
+        sources = [profile.source_payload(chunk) for chunk in relevant_chunks]
+        if profile.drop_sources_on_refusal and reply.strip().startswith(profile.refusal):
+            sources = []  # the passages didn't inform a refusal, so don't present them as sources
+
+        return {"reply": reply, "sources": sources}

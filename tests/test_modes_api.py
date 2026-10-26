@@ -75,7 +75,8 @@ def test_modes_endpoint_lists_all_four_with_availability(api):
     by_id = {m["id"]: m for m in modes}
     assert list(by_id) == ["standard", "report", "long", "visual", "paged"]
     assert by_id["standard"]["available"] is True and by_id["standard"]["documentCount"] == 0
-    assert by_id["report"]["available"] is False and "documentCount" not in by_id["report"]
+    assert by_id["report"]["available"] is True and by_id["report"]["extensions"] == [".pdf"]
+    assert by_id["long"]["available"] is False and "documentCount" not in by_id["long"]
     assert by_id["standard"]["extensions"] == [".txt", ".md", ".pdf"]
 
 
@@ -95,10 +96,10 @@ def test_unknown_mode_is_a_400_on_every_route(api):
 
 
 def test_unavailable_mode_is_a_501_and_never_calls_the_model(api):
-    res = api.client.post("/api/chat", json={"message": "hi", "mode": "report"})
+    res = api.client.post("/api/chat", json={"message": "hi", "mode": "long"})
 
     assert res.status_code == 501
-    assert res.json() == {"error": "The Report mode isn't available yet."}
+    assert res.json() == {"error": "The Long document mode isn't available yet."}
     assert api.llm.messages == []
     assert upload(api.client, "a.txt", b"hello", "visual").status_code == 501
     assert api.client.get("/api/status?mode=long").status_code == 501

@@ -88,6 +88,21 @@ class CachedEmbedder:
             )
             self.db.commit()
 
+    def add_texts(self, texts: list[str], vectors: list[list[float]]) -> int:
+        """Seed the cache with vectors computed elsewhere (e.g. a prototype
+        repo's index) for these exact texts. Returns how many were stored."""
+        items = {self._key(t): list(v) for t, v in zip(texts, vectors) if v}
+        if items:
+            self._put_many(items)
+        return len(items)
+
+    def add_keyed(self, items: dict[str, list[float]]) -> int:
+        """Seed the cache from {key: vector} (keys as `_key` produces them)."""
+        items = {k: list(v) for k, v in items.items() if v}
+        if items:
+            self._put_many(items)
+        return len(items)
+
     def cache_size(self) -> int:
         with self._lock:
             return self.db.execute("SELECT COUNT(*) FROM embeddings").fetchone()[0]

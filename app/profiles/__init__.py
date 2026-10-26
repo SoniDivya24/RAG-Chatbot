@@ -1,4 +1,5 @@
 from app.profiles.base import Chunk, Profile, UnavailableProfile
+from app.profiles.report import ReportProfile
 from app.profiles.standard import StandardProfile
 
 DEFAULT_MODE = "standard"
@@ -7,22 +8,13 @@ DEFAULT_MODE = "standard"
 def default_profiles() -> dict[str, Profile]:
     """Every mode the app knows about, in display order.
 
-    The three scenario modes are registered now so the UI and API can list
-    them, but stay unavailable until their pipelines are ported in.
+    Report is implemented; Long document and Visual document are registered so
+    the UI and API can list them, but stay unavailable until their pipelines
+    are ported in.
     """
     profiles: list[Profile] = [
         StandardProfile(),
-        UnavailableProfile(
-            "report",
-            "Report",
-            "Plain-text reports: page-aware answers with page citations.",
-            upload_hint="PDF reports written in running text, such as an annual report.",
-            example_questions=(
-                "How many depository libraries did GPO staff visit in FY 2018?",
-                "What new digital system replaced FDsys, and when was it fully deployed?",
-                "How much did GPO procure in printing and information products in FY 2018 on behalf of federal agencies?",
-            ),
-        ),
+        ReportProfile(),
         UnavailableProfile(
             "long",
             "Long document",
@@ -49,4 +41,12 @@ def default_profiles() -> dict[str, Profile]:
     return {p.id: p for p in profiles}
 
 
-__all__ = ["Chunk", "Profile", "UnavailableProfile", "StandardProfile", "DEFAULT_MODE", "default_profiles"]
+__all__ = [
+    "Chunk",
+    "Profile",
+    "UnavailableProfile",
+    "StandardProfile",
+    "ReportProfile",
+    "DEFAULT_MODE",
+    "default_profiles",
+]

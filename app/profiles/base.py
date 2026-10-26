@@ -44,6 +44,13 @@ class Profile(ABC):
     # Chunks scoring below this cosine similarity are noise, not real matches.
     min_score: float = 0.62
 
+    # How the model answers: creativity, and the exact sentence it uses when the
+    # documents don't contain the answer.
+    temperature: float = 0.7
+    refusal: str = "I don't have that information in the documents."
+    # Show no sources for an answer that is a refusal (they didn't inform it).
+    drop_sources_on_refusal: bool = False
+
     # System-prompt text used when relevant chunks were found; the chat session
     # appends the formatted context after it.
     grounded_instructions: str = ""

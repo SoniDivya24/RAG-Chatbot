@@ -136,6 +136,13 @@ PDFs are **built-in samples, gitignored** (`samples/`), loadable with one click 
 ### Phase 12 - Report mode (port of the GPO prototype)
 - **Build:** per-page extraction with running-head stripping, page-tagged chunks, relevance floor,
   page-cited grounded prompt with exact refusal. Eval: 3 core + extended + refusal questions.
+- **As built:** the prototype hard-coded GPO's header patterns; the port detects page furniture generically
+  (a line repeating in the head/foot zone of >=10% of pages, number-insensitive) and reproduces the prototype's
+  cleaning *exactly* on the GPO report (70/70 pages, 263/263 chunks identical), so the prototype's embeddings
+  were imported (`scripts/import_cache.py`) and indexing the sample costs no embedding calls. New per-profile
+  settings: temperature, refusal wording, drop-sources-on-refusal. Upload cap raised 4 -> 25 MB (the reference
+  PDFs are 4-7 MB). The 15-question set lives in `eval/questions/report.json`; `eval/run_eval.py --mode report`
+  writes `docs/results/report.md`.
 
 ### Phase 13 - Visual document mode (port of the iMac prototype)
 - **Build:** PyMuPDF geometry for tables (rebuilt under header bars), footnote markers linked to

@@ -32,7 +32,7 @@ Two things changed, and the "Quick summary" below is **partly out of date until 
 - **The three scenario repos:** the user manages them; don't touch them, only read them to port code.
 - **Plan and status:** Part 2 of `docs/phases.md` (Phases 9-16) and `docs/progress.md`. **Phase 9
   (local-only foundation) Phase 10 (pluggable pipeline + `mode` plumbing) and Phase 11 (the UI
-  mode switch) are Done; Phase 12 (Report mode, ported from the GPO prototype) is next.**
+  mode switch) and Phase 12 (Report mode) are Done; Phase 13 (Visual document mode, from the iMac prototype) is next.**
 
 ## Sibling repos (see `../CLAUDE.md` for the full registry)
 
@@ -79,8 +79,13 @@ Quick summary (see `README.md` for full detail and rationale):
   example-question chips, composer placeholder and help text; it lives in the URL hash. Answers carry a mode
   tag and Sources show page / section / kind tags. Details in `docs/frontend.md`. The UI was verified with a
   scratch Playwright script (outside the repo) driving the cached headless Chromium.
-- Next: the three scenario profiles - Report (12), Visual document (13), Long document (14); see
-  `docs/phases.md` Part 2
+- **Report mode (Phase 12, done):** `app/profiles/report.py` - the first scenario mode, ported from the GPO
+  prototype. Profiles now also set `temperature`, `refusal` wording and `drop_sources_on_refusal`; uploads may be
+  up to 25 MB. `scripts/import_cache.py` seeds the embedding cache from a prototype's stored vectors (Chroma index or
+  `{key: vector}` JSON) so indexing a reference document costs no embeddings - run it before indexing a sample.
+  `eval/run_eval.py --mode <mode>` indexes the sample into a throwaway library and writes `docs/results/<mode>.md`
+  (Report: core 3/3, extended 8/8, refusals 4/4, MRR 0.84). The reference PDFs live in the gitignored `samples/`.
+- Next: Visual document (13) then Long document (14), ported from their prototypes; see `docs/phases.md` Part 2
 
 ## `.mcp.json` - Supabase MCP server (**obsolete since Phase 9** - the app no longer uses Supabase; the file and the `SUPABASE_ACCESS_TOKEN` in `.claude/settings.json` are leftovers the user can delete whenever they like, along with the cloud project)
 

@@ -18,7 +18,8 @@ config.require("GOOGLE_API_KEY")
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 MAX_FILES_PER_UPLOAD = 5
-MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+MAX_UPLOAD_MB = 25  # local-only app: the reference PDFs are 4-7 MB
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 MAX_MESSAGE_LENGTH = 4000
 MAX_HISTORY_TURNS = 40
 
@@ -128,7 +129,9 @@ async def upload(
 
         content = await file.read()
         if len(content) > MAX_UPLOAD_BYTES:
-            errors.append({"sourceName": file.filename, "error": "File too large (max 4MB)"})
+            errors.append(
+                {"sourceName": file.filename, "error": f"File too large (max {MAX_UPLOAD_MB}MB)"}
+            )
             continue
 
         try:

@@ -1,0 +1,17 @@
+[
+  {"id": "Q1", "core": true, "question": "How many depository libraries did GPO staff visit in FY 2018?", "must_contain": [["166"]], "gold_pages": [5, 21]},
+  {"id": "Q2", "core": true, "question": "What new digital system replaced FDsys, and when was it fully deployed?", "must_contain": [["govinfo"], ["December 2018", "2018"]], "gold_pages": [4, 22]},
+  {"id": "Q3", "core": true, "question": "How much did GPO procure in printing and information products in FY 2018 on behalf of federal agencies?", "must_contain": [["375"]], "gold_pages": [5, 14, 17]},
+  {"id": "E1", "question": "How many people did GPO employ in FY 2018?", "must_contain": [["1,737"]], "gold_pages": [14, 15]},
+  {"id": "E2", "question": "What were GPO's FY 2018 revenues?", "must_contain": [["874,466,000", "874.5 million", "874 million"]], "gold_pages": [14, 15]},
+  {"id": "E3", "question": "How many passports did GPO produce in FY 2018?", "must_contain": [["15,901,600", "15.9 million"]], "gold_pages": [14, 15]},
+  {"id": "E4", "question": "How many copies of how many titles were distributed to depository libraries?", "must_contain": [["802,834"], ["4,211"]], "gold_pages": [5, 15, 19]},
+  {"id": "E5", "question": "How many titles did GPO catalog in FY 2018?", "must_contain": [["34,367"]], "gold_pages": [5, 15, 19]},
+  {"id": "E6", "question": "How many titles does govinfo make available online?", "must_contain": [["2.5 million"]], "gold_pages": [4, 22]},
+  {"id": "E7", "question": "How many FDLP Academy webinars were held and how many participants attended?", "must_contain": [["85"], ["10,"]], "gold_pages": [5, 20]},
+  {"id": "E8", "question": "What was GPO's net income in FY 2018?", "must_contain": [["52,624", "52.6 million"]], "gold_pages": [26, 44, 59, 60]},
+  {"id": "N1", "refusal": true, "question": "What were GPO's revenues in FY 2020?"},
+  {"id": "N2", "refusal": true, "question": "Who is the current Public Printer of the United States?"},
+  {"id": "N3", "refusal": true, "question": "What is the capital of France?"},
+  {"id": "N4", "refusal": true, "question": "How many employees did GPO have in FY 2015?"}
+]
